@@ -1,6 +1,8 @@
-const PHOTO_TTL_MS = 5 * 60 * 1000; // Exakt 5 Minuten
-const MAX_ACTIVE_PHOTOS = 30;       // Maximal 30 Fotos (älteste werden ersetzt)
-const MAX_FILE_SIZE_BYTES = 24 * 1024 * 1024;
+const DEFAULT_TTL_MINUTES = 5;
+const MIN_TTL_MINUTES = 1;
+const MAX_TTL_MINUTES = 60;
+const MAX_ACTIVE_PHOTOS = 30;
+const MAX_FILE_SIZE_BYTES = 24 * 1024 * 1024; // 24 MB (Cloudflare KV erlaubt bis 25 MB)
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const json = (body, status = 200) =>
@@ -90,6 +92,31 @@ async function verifyPin(env, candidate) {
   return safeEqual(fromHex(await pbkdf2(candidate, salt)), fromHex(hash));
 }
 
+async function getAppSettings(env) {
+  const rows = await env.DB.prepare(
+    "SELECT key, value FROM app_config WHERE key IN ('ttl_minutes', 'direct_links_enabled')"
+  ).all();
+  let ttlMinutes = DEFAULT_TTL_MINUTES;
+  let directLinksEnabled = false;
+  for (const row of rows.results) {
+    if (row.key === 'ttl_minutes') {
+      const parsed = Number.parseInt(row.value, 10);
+      if (Number.isFinite(parsed) && parsed >= MIN_TTL_MINUTES && parsed <= MAX_TTL_MINUTES) {
+        ttlMinutes = parsed;
+      }
+    } else if (row.key === 'direct_links_enabled') {
+      directLinksEnabled = row.value === '1';
+    }
+  }
+  return { ttlMinutes, ttlMs: ttlMinutes * 60 * 1000, directLinksEnabled };
+}
+
+async function setConfigValue(env, key, value) {
+  await env.DB.prepare(
+    'INSERT INTO app_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  ).bind(key, value).run();
+}
+
 async function purgeExpired(env, now) {
   const expired = await env.DB.prepare('SELECT id, r2_key FROM photos WHERE expires_at <= ?').bind(now).all();
   if (expired.results.length === 0) return;
@@ -128,7 +155,7 @@ export async function onRequest({ request, env }) {
     if (pin.length < 4 || pin.length > 32) return json({ error: 'PIN muss 4–32 Zeichen haben.' }, 400);
     const salt = new Uint8Array(16); crypto.getRandomValues(salt);
     const saltHex = toHex(salt);
-    await env.DB.prepare('INSERT INTO app_config (key, value) VALUES (?, ?)').bind('pin_hash', saltHex + ':' + (await pbkdf2(pin, saltHex))).run();
+    await setConfigValue(env, 'pin_hash', saltHex + ':' + (await pbkdf2(pin, saltHex)));
     return json({ ...(await createSession(env)), configured: true }, 201);
   }
 
@@ -145,12 +172,36 @@ export async function onRequest({ request, env }) {
     return json({ ok: true });
   }
 
+  // Admin-Einstellungen speichern (Speicherdauer & persönliche Links)
+  if (sub === 'settings' && method === 'POST') {
+    if (!(await isValidSession(env, getToken(request)))) return json({ error: 'Bitte mit Team-PIN anmelden.' }, 401);
+    const body = await request.json().catch(() => ({}));
+
+    if (body.ttlMinutes !== undefined) {
+      const mins = Number.parseInt(String(body.ttlMinutes), 10);
+      if (!Number.isFinite(mins) || mins < MIN_TTL_MINUTES || mins > MAX_TTL_MINUTES) {
+        return json({ error: `Speicherdauer muss zwischen ${MIN_TTL_MINUTES} und ${MAX_TTL_MINUTES} Minuten liegen.` }, 400);
+      }
+      await setConfigValue(env, 'ttl_minutes', String(mins));
+    }
+
+    if (typeof body.directLinksEnabled === 'boolean') {
+      await setConfigValue(env, 'direct_links_enabled', body.directLinksEnabled ? '1' : '0');
+    }
+
+    const updated = await getAppSettings(env);
+    return json({ ok: true, ...updated });
+  }
+
   if (sub === 'photos' && method === 'GET') {
     await purgeExpired(env, now);
+    const settings = await getAppSettings(env);
     const rows = await env.DB.prepare('SELECT * FROM photos WHERE expires_at > ? ORDER BY created_at DESC LIMIT ?').bind(now, MAX_ACTIVE_PHOTOS).all();
     return json({
       serverNow: now,
-      ttlMs: PHOTO_TTL_MS,
+      ttlMinutes: settings.ttlMinutes,
+      ttlMs: settings.ttlMs,
+      directLinksEnabled: settings.directLinksEnabled,
       maxPhotos: MAX_ACTIVE_PHOTOS,
       photos: rows.results.map((r) => ({
         id: r.id, fileName: r.file_name, mimeType: r.mime_type, sizeBytes: r.size_bytes,
@@ -163,10 +214,12 @@ export async function onRequest({ request, env }) {
   if (sub === 'photos' && method === 'POST') {
     if (!(await isValidSession(env, getToken(request)))) return json({ error: 'Bitte mit Team-PIN anmelden.' }, 401);
     await purgeExpired(env, now);
+    const settings = await getAppSettings(env);
+
     const fd = await request.formData().catch(() => null);
     const file = fd && fd.get('photo');
     if (!file || typeof file === 'string') return json({ error: 'Bitte eine Bilddatei auswählen.' }, 400);
-    if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) return json({ error: 'Maximal 15 MB pro Foto.' }, 413);
+    if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) return json({ error: 'Maximal 24 MB pro Foto.' }, 413);
 
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
@@ -175,17 +228,19 @@ export async function onRequest({ request, env }) {
 
     const id = crypto.randomUUID();
     const createdAt = Date.now();
-    const expiresAt = createdAt + PHOTO_TTL_MS;
+    const ttlSeconds = Math.max(60, settings.ttlMinutes * 60);
+    const ttlMs = ttlSeconds * 1000;
+    const expiresAt = createdAt + ttlMs;
     const fileName = fileNameFor(mime, createdAt);
     const kvKey = 'live:' + id;
 
-    await env.PHOTOS_KV.put(kvKey, arrayBuffer, { expirationTtl: 300 });
+    await env.PHOTOS_KV.put(kvKey, arrayBuffer, { expirationTtl: ttlSeconds });
     await env.DB.prepare(
       'INSERT INTO photos (id, r2_key, file_name, mime_type, size_bytes, width, height, created_at, expires_at) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, ?)'
     ).bind(id, kvKey, fileName, mime, bytes.length, createdAt, expiresAt).run();
     await enforceMax30(env);
 
-    return json({ serverNow: createdAt, photo: { id, fileName, mimeType: mime, sizeBytes: bytes.length, width: null, height: null, createdAt, expiresAt, remainingMs: PHOTO_TTL_MS } }, 201);
+    return json({ serverNow: createdAt, photo: { id, fileName, mimeType: mime, sizeBytes: bytes.length, width: null, height: null, createdAt, expiresAt, remainingMs: ttlMs } }, 201);
   }
 
   const fileMatch = sub.match(/^photos\/([a-zA-Z0-9-]+)\/file$/);
