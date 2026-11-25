@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Lokale QR-Code-Erzeugung im Browser (keine Foto-Links an Drittserver) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
   <style>
     :root {
       --bg: #FAFAFA;
@@ -28,9 +30,9 @@
       -webkit-font-smoothing: antialiased;
     }
     body { display: flex; flex-direction: column; min-height: 100dvh; }
-    button, input { font: inherit; color: inherit; }
+    button, input, select { font: inherit; color: inherit; }
     button { cursor: pointer; border: none; background: none; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
     .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
     .serif { font-family: "Fraunces", Georgia, serif; }
     .hidden { display: none !important; }
@@ -64,6 +66,7 @@
     .btn-danger:hover { border-color: #FECACA; background: #FEF2F2; color: var(--danger); }
     .btn-ghost { color: var(--muted); padding: 8px 10px; }
     .btn-ghost:hover { color: var(--text); }
+    .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 12px; }
 
     /* Main Layout */
     main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 40px 20px 88px; }
@@ -109,7 +112,7 @@
     .card-meta .warn-text { color: var(--warn); font-weight: 600; }
     .card-actions { display: flex; gap: 8px; }
     .card-actions .btn-save { flex: 1; min-height: 42px; font-size: 13px; }
-    .card-actions .btn-icon { min-width: 42px; min-height: 42px; padding: 0 10px; font-size: 13px; }
+    .card-actions .btn-icon { min-width: 42px; min-height: 42px; padding: 0 11px; font-size: 12px; }
 
     /* Empty State */
     .empty-box {
@@ -121,7 +124,7 @@
     .empty-box p { max-width: 380px; font-size: 14px; line-height: 1.6; color: var(--muted); }
 
     /* Panel / Settings / Privacy */
-    .narrow { max-width: 780px; margin: 0 auto; }
+    .narrow { max-width: 820px; margin: 0 auto; }
     .pin-card {
       max-width: 420px; margin: 32px auto 0; background: var(--surface);
       border: 1px solid var(--border); border-radius: 18px; padding: 28px;
@@ -130,15 +133,19 @@
     .pin-card p { font-size: 14px; line-height: 1.6; color: var(--muted); margin-bottom: 20px; }
     .field { margin-bottom: 14px; }
     .field label { display: block; font-size: 12px; font-weight: 500; color: #3F3F46; margin-bottom: 6px; }
-    .field input {
+    .field input, .select-input {
       width: 100%; height: 42px; padding: 0 12px; border-radius: 9px;
       border: 1px solid #D4D4D8; background: #FFF; font-size: 14px;
     }
-    .field input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+    .field input:focus, .select-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
     .err-msg { color: var(--danger); font-size: 12px; font-weight: 500; margin-bottom: 12px; }
     .warn-box {
       border: 1px solid #FDE68A; background: #FFFBEB; color: #92400E;
       border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.5; margin-top: 14px;
+    }
+    .info-box {
+      border: 1px solid var(--border); background: #FAFAFA; color: #3F3F46;
+      border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.5; margin-top: 10px;
     }
 
     .tabs {
@@ -156,6 +163,12 @@
     }
     .box h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
     .box p { font-size: 13px; line-height: 1.6; color: var(--muted); }
+    .kiosk-grid-cards {
+      display: grid; gap: 20px; grid-template-columns: 1fr;
+    }
+    @media (min-width: 720px) { .kiosk-grid-cards { grid-template-columns: 1fr 1fr; } }
+    .kiosk-grid-cards .box { margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; }
+
     .dropzone {
       border: 1px dashed #D4D4D8; border-radius: 16px; background: #FFF;
       padding: 36px 20px; text-align: center; transition: border-color .15s, background .15s;
@@ -163,9 +176,16 @@
     }
     .dropzone.drag { border-color: var(--accent); background: rgba(37,99,235,0.04); }
     .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
-    .checkbox-row {
-      display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: #3F3F46; cursor: pointer;
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .preset-btn {
+      min-height: 36px; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border); background: #FFF; color: var(--text);
     }
+    .preset-btn.active { background: var(--text); border-color: var(--text); color: #FFF; }
+    .checkbox-row {
+      display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; font-size: 13px; color: #3F3F46; cursor: pointer;
+    }
+    .checkbox-row input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--accent); }
     .list {
       margin-top: 16px; border: 1px solid var(--border); border-radius: 12px;
       overflow: hidden; background: #FFF;
@@ -211,7 +231,7 @@
     .lb-prev { left: 12px; }
     .lb-next { right: 12px; }
 
-    /* Purist Dark Beamer Kiosk */
+    /* Dark Beamer Kiosk (Modus 1: Puristisch 2–3 Fotos · Modus 2: Letztes Foto + Persönlicher Link & QR) */
     .kiosk {
       position: fixed; inset: 0; z-index: 50; background: #050505; color: #FFF;
       height: 100dvh; width: 100vw; padding: 24px; display: flex; flex-direction: column; overflow: hidden;
@@ -221,6 +241,7 @@
     .kiosk-stage.count-1 { grid-template-columns: 1fr; place-items: center; }
     .kiosk-stage.count-2 { grid-template-columns: 1fr 1fr; }
     .kiosk-stage.count-3 { grid-template-columns: 7fr 5fr; }
+    .kiosk-stage.single-link { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; gap: 28px; }
     .kiosk-side { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; min-height: 0; }
     .kiosk-frame {
       width: 100%; height: 100%; min-height: 0; overflow: hidden;
@@ -229,7 +250,29 @@
     }
     .kiosk-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .kiosk-stage.count-1 .kiosk-frame { max-width: 92vw; max-height: 90dvh; }
-    .kiosk-stage.count-1 .kiosk-frame img { object-fit: contain; }
+    .kiosk-stage.count-1 .kiosk-frame img,
+    .kiosk-stage.single-link .kiosk-frame img { object-fit: contain; }
+
+    /* Persönliche Link- & QR-Karte in Kiosk-Modus 2 */
+    .kiosk-qr-panel {
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; padding: 28px 24px; border-radius: 18px;
+      border: 1px solid #27272A; background: #111114; gap: 18px;
+    }
+    .kiosk-qr-box {
+      width: 230px; height: 230px; padding: 14px; border-radius: 14px;
+      background: #FFFFFF; display: flex; align-items: center; justify-content: center;
+    }
+    .kiosk-qr-box svg { width: 100%; height: 100%; display: block; }
+    .kiosk-qr-title { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; color: #FAFAFA; }
+    .kiosk-qr-sub { font-size: 13px; line-height: 1.5; color: #A1A1AA; }
+    .kiosk-qr-url {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      background: #09090B; border: 1px solid #27272A;
+      font-size: 11px; color: #D4D4D8; word-break: break-all; line-height: 1.4;
+    }
+    .kiosk-qr-cd { font-size: 13px; color: #E4E4E7; }
+
     .kiosk-empty {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
     }
@@ -237,7 +280,7 @@
     .kiosk-empty p { margin-top: 12px; font-size: 14px; color: #71717A; }
     .kiosk-bar {
       position: fixed; right: 20px; bottom: 20px; z-index: 55;
-      display: flex; align-items: center; gap: 8px; padding: 6px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px;
       border-radius: 12px; background: rgba(17,17,19,0.92); border: 1px solid #27272A;
       transition: opacity .25s;
     }
@@ -247,9 +290,11 @@
     }
     .kiosk-bar button.active { background: #FFF; color: #111; }
     .kiosk-bar button:hover:not(.active) { background: #27272A; color: #FFF; }
-    @media (max-width: 900px) {
-      .kiosk-stage.count-2, .kiosk-stage.count-3 { grid-template-columns: 1fr; }
+    @media (max-width: 960px) {
+      .kiosk-stage.count-2, .kiosk-stage.count-3, .kiosk-stage.single-link { grid-template-columns: 1fr; }
       .kiosk-side { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+      .kiosk-qr-panel { flex-direction: row; text-align: left; padding: 16px; }
+      .kiosk-qr-box { width: 132px; height: 132px; flex-shrink: 0; padding: 8px; }
     }
 
     /* Toast */
@@ -282,17 +327,17 @@
     </div>
     <div id="galleryEmpty" class="empty-box hidden">
       <h2 class="serif">Gerade sind keine Fotos aktiv</h2>
-      <p>Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils 5 Minuten in voller Qualität zum Herunterladen verfügbar.</p>
+      <p id="emptyDesc">Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils 5 Minuten in voller Qualität zum Herunterladen verfügbar.</p>
     </div>
     <div id="galleryGrid" class="grid"></div>
   </main>
 
-  <!-- View 2: Einstellungen (PIN-geschützt) -->
+  <!-- View 2: Admin-Terminal / Einstellungen (PIN-geschützt) -->
   <main id="viewSettings" class="hidden">
     <!-- PIN Login / Erstsetup -->
     <div id="pinGate" class="pin-card">
       <h1 id="pinTitle">Einstellungen (Team-PIN)</h1>
-      <p id="pinDesc">Melde dich mit der Team-PIN an, um Fotos hochzuladen, den Kamera-Ordner zu verbinden oder den Beamer-Kiosk zu starten.</p>
+      <p id="pinDesc">Melde dich mit der Team-PIN an, um Fotos hochzuladen, die Speicherdauer einzustellen oder einen Kiosk-Modus zu starten.</p>
       <form id="pinForm">
         <div class="field">
           <label for="pinInput" id="pinLabel">Team-PIN</label>
@@ -307,33 +352,42 @@
       </form>
     </div>
 
-    <!-- Eingeloggter Team-Bereich -->
+    <!-- Eingeloggtes Admin-Terminal -->
     <div id="settingsHub" class="narrow hidden">
       <div class="page-head" style="border-bottom:1px solid var(--border); margin-bottom:24px;">
         <div>
-          <h1>Einstellungen</h1>
-          <p class="submeta" style="margin-top:4px;">Team-Bereich für Foto-Upload, Ordner-Automatik und Beamer-Kiosk.</p>
+          <h1>Admin-Einstellungen</h1>
+          <p class="submeta" style="margin-top:4px;">Foto-Upload, Archiv-Ordner, Speicherdauer, persönliche Links und beide Kiosk-Modi.</p>
         </div>
         <button type="button" class="btn btn-outline" id="logoutBtn">Abmelden</button>
       </div>
 
       <div class="tabs">
         <button type="button" class="tab-btn active" data-tab="upload">Upload &amp; Ordner</button>
+        <button type="button" class="tab-btn" data-tab="options">Speicherdauer &amp; Links</button>
         <button type="button" class="tab-btn" data-tab="kiosk">Beamer-Kiosk</button>
       </div>
 
-      <!-- Tab: Upload & Ordner -->
+      <!-- Tab 1: Upload & Ordner -->
       <div id="tabUpload">
-        <!-- Auto Ordner Watcher -->
+        <!-- Automatischer Ordner-Upload inkl. Archiv-Modus -->
         <section class="box">
           <h2>Automatischer Ordner-Upload (Mac &amp; Windows)</h2>
-          <p>Wähle in Chrome oder Edge den Ausgabeordner eurer Kamera/Fotobox aus. Neue Fotos werden automatisch in voller Qualität hochgeladen und nach bestätigtem Upload sofort aus dem Ordner gelöscht.</p>
-          <label class="checkbox-row">
-            <input type="checkbox" id="deleteAfterCheck" checked />
-            <span>Lokale Datei nach erfolgreichem Upload automatisch löschen</span>
-          </label>
+          <p>Überwacht in Chrome oder Edge automatisch euren OBS-/Kamera-Ordner und lädt neue Bilder in voller Qualität (bis 24 MB) hoch.</p>
+
+          <div class="field" style="margin-top:14px; margin-bottom:0;">
+            <label for="folderModeSelect">Verhalten nach erfolgreichem Upload</label>
+            <select id="folderModeSelect" class="select-input">
+              <option value="archive">In Unterordner „Archiv“ verschieben (Eingang → Archiv)</option>
+              <option value="delete">Lokale Datei nach Upload komplett löschen</option>
+              <option value="keep">Lokale Datei unverändert im Ordner behalten</option>
+            </select>
+          </div>
+
+          <div id="folderModeHint" class="info-box"></div>
+
           <div class="row-actions">
-            <button type="button" class="btn btn-dark" id="pickFolderBtn">Kamera-Ordner auswählen</button>
+            <button type="button" class="btn btn-dark" id="pickFolderBtn">Hauptordner auswählen</button>
             <button type="button" class="btn btn-outline hidden" id="pauseFolderBtn">Pausieren</button>
             <button type="button" class="btn btn-danger hidden" id="stopFolderBtn">Trennen</button>
             <span class="submeta mono" id="folderStatus"></span>
@@ -345,7 +399,7 @@
         <!-- Manueller Upload -->
         <section id="dropzone" class="dropzone">
           <h2 style="font-size:16px; margin-bottom:6px;">Einzelne Fotos manuell hochladen</h2>
-          <p class="submeta">JPEG, PNG oder WebP · bis 15 MB · volle Originalauflösung · 5 Min. sichtbar</p>
+          <p class="submeta" id="manualUploadHint">JPEG, PNG oder WebP · bis 24 MB · volle Originalauflösung · 5 Min. sichtbar</p>
           <div class="row-actions" style="justify-content:center;">
             <button type="button" class="btn btn-primary" id="selectFilesBtn">Dateien auswählen</button>
             <button type="button" class="btn btn-outline" id="openCameraBtn">Kamera öffnen</button>
@@ -365,14 +419,70 @@
         </section>
       </div>
 
-      <!-- Tab: Beamer Kiosk -->
-      <div id="tabKiosk" class="hidden">
+      <!-- Tab 2: Speicherdauer & Persönliche Links -->
+      <div id="tabOptions" class="hidden">
         <section class="box">
-          <h2>Beamer-Kiosk-Modus (Dunkel)</h2>
-          <p style="margin-bottom:14px;">Zeigt im Vollbild auf tiefschwarzem Hintergrund ausschließlich die letzten 2 oder 3 aktiven Fotos sauber geordnet — ohne Texte, Menüs oder Countdowns. Neue Fotos rücken automatisch nach.</p>
-          <p class="submeta" style="margin-bottom:20px;">Tasten im Kiosk: <span class="mono">2</span> oder <span class="mono">3</span> für Anzahl · <span class="mono">F</span> Vollbild · <span class="mono">ESC</span> Beenden</p>
-          <button type="button" class="btn btn-dark" id="startKioskBtn">Beamer-Kiosk jetzt starten</button>
+          <h2>Speicherdauer pro Foto</h2>
+          <p>Stelle hier jederzeit ein, wie viele Minuten neu hochgeladene Fotos gespeichert bleiben, bevor sie automatisch aus Cloudflare KV, D1, Galerie und Beamer gelöscht werden (1 bis 60 Minuten).</p>
+
+          <div class="preset-row" id="ttlPresets">
+            <button type="button" class="preset-btn" data-min="1">1 Min</button>
+            <button type="button" class="preset-btn" data-min="3">3 Min</button>
+            <button type="button" class="preset-btn" data-min="5">5 Min</button>
+            <button type="button" class="preset-btn" data-min="10">10 Min</button>
+            <button type="button" class="preset-btn" data-min="15">15 Min</button>
+            <button type="button" class="preset-btn" data-min="30">30 Min</button>
+            <button type="button" class="preset-btn" data-min="60">60 Min</button>
+          </div>
+
+          <div class="row-actions" style="margin-top:16px;">
+            <input type="number" id="ttlCustomInput" min="1" max="60" value="5" style="width:110px; height:40px; padding:0 12px; border-radius:9px; border:1px solid #D4D4D8;" />
+            <span class="submeta">Minuten (gilt für alle ab jetzt neu hochgeladenen Fotos)</span>
+          </div>
         </section>
+
+        <section class="box">
+          <h2>Persönliche Foto-Links (global an / aus)</h2>
+          <p>Aktiviert persönliche Direkt-Links (<span class="mono">/?foto=...</span>) in der Galerie, in der Vollbild-Ansicht sowie im <strong>Kiosk-Modus 2 (Letztes Foto + QR-Code)</strong>. Wenn deaktiviert, werden alle persönlichen Links, Kopier-Buttons und QR-Einblendungen komplett gesperrt.</p>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="directLinksToggle" />
+            <span>Persönliche Links zu einzelnen Bildern aktivieren</span>
+          </label>
+        </section>
+
+        <button type="button" class="btn btn-primary" id="saveOptionsBtn">Einstellungen speichern</button>
+      </div>
+
+      <!-- Tab 3: Beide Kiosk-Modi -->
+      <div id="tabKiosk" class="hidden">
+        <div class="kiosk-grid-cards">
+          <!-- Kiosk 1: Puristisch (2 oder 3 Fotos) -->
+          <section class="box">
+            <div>
+              <h2>Kiosk 1: Galerie-Beamer (2–3 Fotos)</h2>
+              <p style="margin-top:6px;">Zeigt im Vollbild auf tiefschwarzem Hintergrund ausschließlich die letzten 2 oder 3 aktiven Fotos sauber geordnet — komplett puristisch ohne Texte, Links oder QR-Code.</p>
+              <p class="submeta" style="margin-top:12px;">Tasten: <span class="mono">2</span> / <span class="mono">3</span> Fotos · <span class="mono">F</span> Vollbild · <span class="mono">ESC</span> Beenden</p>
+            </div>
+            <div style="margin-top:20px;">
+              <button type="button" class="btn btn-dark" style="width:100%;" id="startKioskGalleryBtn">Kiosk 1 starten (2–3 Fotos)</button>
+            </div>
+          </section>
+
+          <!-- Kiosk 2: Letztes Foto + Persönlicher Link & QR -->
+          <section class="box">
+            <div>
+              <h2>Kiosk 2: Letztes Foto + Persönlicher Link</h2>
+              <p style="margin-top:6px;">Zeigt ausschließlich das allerneueste Foto groß auf dem Bildschirm zusammen mit einem persönlichen QR-Code und Direkt-Link zu genau diesem Bild.</p>
+              <div id="kioskSingleDisabledNote" class="warn-box hidden">
+                Persönliche Foto-Links sind aktuell im Tab „Speicherdauer &amp; Links“ deaktiviert. Aktiviere sie dort zuerst, um Kiosk 2 mit persönlichem Link &amp; QR zu nutzen.
+              </div>
+            </div>
+            <div style="margin-top:20px;">
+              <button type="button" class="btn btn-primary" style="width:100%;" id="startKioskSingleBtn">Kiosk 2 starten (Letztes Foto + Link)</button>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </main>
@@ -384,8 +494,8 @@
         <h1>Datenschutz beim Tag der offenen Tür</h1>
       </div>
       <div class="box">
-        <h2>01. Automatische Löschung nach exakt 5 Minuten</h2>
-        <p>Jede Aufnahme bleibt genau 300 Sekunden sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.</p>
+        <h2 id="privacyTtlTitle">01. Automatische Löschung nach 5 Minuten</h2>
+        <p id="privacyTtlDesc">Jede Aufnahme bleibt aktuell genau 5 Minuten sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.</p>
       </div>
       <div class="box">
         <h2>02. Begrenzung auf maximal 30 aktive Fotos</h2>
@@ -402,7 +512,7 @@
   <!-- Footer ganz unten -->
   <footer id="appFooter">
     <div class="footer-inner">
-      <span>Automatische Löschung nach 5 Minuten</span>
+      <span id="footerTtlText">Automatische Löschung nach 5 Minuten</span>
       <button type="button" class="footer-link" id="privacyLink">Datenschutz</button>
     </div>
   </footer>
@@ -420,14 +530,15 @@
     </div>
     <div class="lb-bottom">
       <span class="submeta" style="color:#A1A1AA;" id="lbTip">Originaldatei in voller Qualität.</span>
-      <div style="display:flex; gap:10px;">
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        <button type="button" class="btn hidden" style="background:rgba(255,255,255,0.1); color:#FFF;" id="lbCopyLinkBtn">Link kopieren</button>
         <button type="button" class="btn btn-primary" id="lbSaveBtn">In Fotos sichern</button>
         <button type="button" class="btn" style="background:rgba(255,255,255,0.1); color:#FFF;" id="lbDownloadBtn">Original laden</button>
       </div>
     </div>
   </div>
 
-  <!-- Puristischer Beamer-Kiosk (Dunkel, nur letzte 2 oder 3 Fotos) -->
+  <!-- Beamer-Kiosk (beide Modi) -->
   <div id="kioskView" class="kiosk hidden">
     <div id="kioskEmpty" class="kiosk-empty hidden">
       <h2 class="serif">Tag der offenen Tür</h2>
@@ -437,6 +548,7 @@
     <div id="kioskBar" class="kiosk-bar">
       <button type="button" id="kiosk2Btn">2 Fotos</button>
       <button type="button" id="kiosk3Btn" class="active">3 Fotos</button>
+      <button type="button" id="kioskSingleBtn">Letztes + Link</button>
       <button type="button" id="kioskFsBtn">Vollbild</button>
       <button type="button" id="kioskExitBtn">Beenden</button>
     </div>
@@ -446,20 +558,30 @@
 
   <script>
     (() => {
+      const MAX_FILE_BYTES = 24 * 1024 * 1024; // 24 MB
+      const initialDirectPhotoId = new URLSearchParams(window.location.search).get('foto');
+
       const state = {
         view: 'gallery',
         photos: [],
         maxPhotos: 30,
+        ttlMinutes: 5,
         ttlMs: 300000,
+        directLinksEnabled: false,
         clockOffset: 0,
         teamToken: null,
         pinConfigured: true,
         lightboxId: null,
+        pendingDirectPhotoId: initialDirectPhotoId,
+        kioskMode: 'gallery', // 'gallery' (2-3 Fotos puristisch) | 'single' (Letztes Foto + Link & QR)
         kioskCount: 3,
         lastGalleryKey: '',
         lastKioskKey: '',
         lastManageKey: '',
-        dirHandle: null,
+        rootDirHandle: null,
+        watchDirHandle: null,
+        archiveDirHandle: null,
+        activeFolderMode: 'archive',
         watching: false,
         uploadedViaWatcher: 0,
       };
@@ -470,6 +592,7 @@
       let kioskIdleTimer = null;
       let toastTimer = null;
       let watcherInterval = null;
+      let optionsLoadedOnce = false;
 
       const $ = (id) => document.getElementById(id);
       const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -489,6 +612,41 @@
       function photoUrl(id, dl = false) {
         return '/api/photos/' + encodeURIComponent(id) + '/file' + (dl ? '?download=1' : '');
       }
+      function directPhotoShareUrl(id) {
+        return window.location.origin + '/?foto=' + encodeURIComponent(id);
+      }
+
+      // Scharfer Vektor-QR-Code lokal im Browser (ohne innerHTML, ohne externe QR-API)
+      function createQrSvgElement(text) {
+        if (typeof window.qrcode !== 'function') return null;
+        const qr = window.qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        const count = qr.getModuleCount();
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${count} ${count}`);
+        svg.setAttribute('shape-rendering', 'crispEdges');
+        svg.setAttribute('aria-label', 'QR-Code für persönliches Foto');
+
+        const bg = document.createElementNS(ns, 'rect');
+        bg.setAttribute('width', String(count));
+        bg.setAttribute('height', String(count));
+        bg.setAttribute('fill', '#FFFFFF');
+        svg.appendChild(bg);
+
+        let d = '';
+        for (let r = 0; r < count; r++) {
+          for (let c = 0; c < count; c++) {
+            if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+          }
+        }
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', '#111111');
+        svg.appendChild(path);
+        return svg;
+      }
 
       function showToast(msg, isErr = false) {
         const el = $('toast');
@@ -496,6 +654,62 @@
         el.className = 'toast' + (isErr ? ' err' : '');
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => el.classList.add('hidden'), 3600);
+      }
+
+      async function copyDirectLink(id) {
+        if (!state.directLinksEnabled) {
+          showToast('Persönliche Foto-Links sind aktuell deaktiviert.', true);
+          return;
+        }
+        const link = directPhotoShareUrl(id);
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(link);
+            showToast('Persönlicher Foto-Link kopiert.');
+            return;
+          }
+        } catch {}
+        const tmp = document.createElement('input');
+        tmp.value = link;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+        showToast('Persönlicher Foto-Link kopiert.');
+      }
+
+      function syncTtlLabels() {
+        const m = state.ttlMinutes;
+        const unit = m === 1 ? 'Minute' : 'Minuten';
+        $('emptyDesc').textContent = `Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils ${m} ${unit} in voller Qualität zum Herunterladen verfügbar.`;
+        $('manualUploadHint').textContent = `JPEG, PNG oder WebP · bis 24 MB · volle Originalauflösung · ${m} Min. sichtbar`;
+        $('footerTtlText').textContent = `Automatische Löschung nach ${m} ${unit}`;
+        $('privacyTtlTitle').textContent = `01. Automatische Löschung nach ${m} ${unit}`;
+        $('privacyTtlDesc').textContent = `Jede Aufnahme bleibt aktuell genau ${m} ${unit} sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.`;
+      }
+
+      function syncOptionsAndKioskControls() {
+        $('ttlCustomInput').value = String(state.ttlMinutes);
+        $('directLinksToggle').checked = state.directLinksEnabled;
+        document.querySelectorAll('#ttlPresets .preset-btn').forEach((btn) => {
+          btn.classList.toggle('active', Number(btn.dataset.min) === state.ttlMinutes);
+        });
+
+        // Kiosk 2 im Admin-Terminal & in der Kiosk-Leiste sperren, wenn persönliche Links deaktiviert sind
+        $('kioskSingleDisabledNote').classList.toggle('hidden', state.directLinksEnabled);
+        $('startKioskSingleBtn').disabled = !state.directLinksEnabled;
+        $('kioskSingleBtn').classList.toggle('hidden', !state.directLinksEnabled);
+
+        if (!state.directLinksEnabled && state.kioskMode === 'single') {
+          state.kioskMode = 'gallery';
+          updateKioskBarActiveState();
+        }
+      }
+
+      function updateKioskBarActiveState() {
+        $('kiosk2Btn').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 2);
+        $('kiosk3Btn').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 3);
+        $('kioskSingleBtn').classList.toggle('active', state.kioskMode === 'single');
       }
 
       function setView(next) {
@@ -512,12 +726,16 @@
         $('settingsBtn').classList.toggle('hidden', next === 'settings');
         $('settingsBtn').className = state.teamToken ? 'btn btn-dark' : 'btn btn-outline';
         if (isKiosk) {
+          updateKioskBarActiveState();
           revealKioskBar();
           renderKiosk(true);
         } else {
           window.scrollTo(0, 0);
         }
-        if (next === 'settings') renderSettingsAuth();
+        if (next === 'settings') {
+          renderSettingsAuth();
+          syncOptionsAndKioskControls();
+        }
       }
 
       // Lossless iOS / Android Save
@@ -566,10 +784,45 @@
           if (!res.ok) return;
           const data = await res.json();
           if (typeof data.serverNow === 'number') state.clockOffset = data.serverNow - Date.now();
+          if (typeof data.ttlMinutes === 'number') state.ttlMinutes = data.ttlMinutes;
           if (typeof data.ttlMs === 'number') state.ttlMs = data.ttlMs;
+          if (typeof data.directLinksEnabled === 'boolean') state.directLinksEnabled = data.directLinksEnabled;
           if (typeof data.maxPhotos === 'number') state.maxPhotos = data.maxPhotos;
           state.photos = (data.photos || []).sort((a, b) => b.createdAt - a.createdAt);
+
+          syncTtlLabels();
+          if (!optionsLoadedOnce) {
+            optionsLoadedOnce = true;
+            syncOptionsAndKioskControls();
+          } else {
+            // Kiosk 2 sofort anpassen, falls Admin persönliche Links abschaltet
+            $('kioskSingleDisabledNote').classList.toggle('hidden', state.directLinksEnabled);
+            $('startKioskSingleBtn').disabled = !state.directLinksEnabled;
+            $('kioskSingleBtn').classList.toggle('hidden', !state.directLinksEnabled);
+            if (!state.directLinksEnabled && state.kioskMode === 'single') {
+              state.kioskMode = 'gallery';
+              updateKioskBarActiveState();
+            }
+          }
+
           renderAll();
+
+          // Persönlichen Direkt-Link (?foto=<id>) nur öffnen, wenn persönliche Links aktiviert sind!
+          if (state.pendingDirectPhotoId) {
+            const targetId = state.pendingDirectPhotoId;
+            state.pendingDirectPhotoId = null;
+            if (!state.directLinksEnabled) {
+              window.history.replaceState({}, '', window.location.pathname);
+              showToast('Persönliche Foto-Links sind aktuell deaktiviert.', true);
+            } else {
+              const found = activePhotos().find((p) => p.id === targetId);
+              if (found) {
+                openLightbox(found.id);
+              } else {
+                showToast('Dieses verlinkte Foto ist bereits abgelaufen und wurde gelöscht.', true);
+              }
+            }
+          }
         } catch {}
       }
 
@@ -580,9 +833,9 @@
 
       function renderGallery() {
         const list = activePhotos();
-        $('galleryStats').textContent = list.length + ' / ' + state.maxPhotos + ' aktiv · 5 Min. verfügbar';
+        $('galleryStats').textContent = `${list.length} / ${state.maxPhotos} aktiv · ${state.ttlMinutes} Min. verfügbar`;
         $('galleryEmpty').classList.toggle('hidden', list.length > 0);
-        const key = list.map((p) => p.id).join(',') + '|' + Boolean(state.teamToken);
+        const key = list.map((p) => p.id).join(',') + '|' + Boolean(state.teamToken) + '|' + state.directLinksEnabled;
         if (key === state.lastGalleryKey) { updateCountdowns(); return; }
         state.lastGalleryKey = key;
 
@@ -606,6 +859,7 @@
           const fill = document.createElement('div');
           fill.className = 'progress-fill';
           fill.dataset.barExpires = String(photo.expiresAt);
+          fill.dataset.barDuration = String(Math.max(1000, photo.expiresAt - photo.createdAt));
           track.appendChild(fill);
           wrap.appendChild(track);
           card.appendChild(wrap);
@@ -637,6 +891,16 @@
           saveBtn.addEventListener('click', () => savePhoto(photo, false));
           actions.appendChild(saveBtn);
 
+          if (state.directLinksEnabled) {
+            const linkBtn = document.createElement('button');
+            linkBtn.type = 'button';
+            linkBtn.className = 'btn btn-outline btn-icon';
+            linkBtn.title = 'Persönlichen Link kopieren';
+            linkBtn.textContent = 'Link';
+            linkBtn.addEventListener('click', () => copyDirectLink(photo.id));
+            actions.appendChild(linkBtn);
+          }
+
           if (isMobile()) {
             const dlBtn = document.createElement('button');
             dlBtn.type = 'button';
@@ -667,7 +931,7 @@
         if (!state.teamToken) return;
         const list = activePhotos();
         $('manageStats').textContent = list.length + ' / ' + state.maxPhotos + ' belegt';
-        const key = list.map((p) => p.id).join(',');
+        const key = list.map((p) => p.id).join(',') + '|' + state.directLinksEnabled;
         if (key === state.lastManageKey) return;
         state.lastManageKey = key;
 
@@ -699,14 +963,27 @@
           info.append(t, cd);
           left.append(img, info);
 
+          const rightBtns = document.createElement('div');
+          rightBtns.style.display = 'flex';
+          rightBtns.style.gap = '6px';
+
+          if (state.directLinksEnabled) {
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'btn btn-outline btn-sm';
+            copyBtn.textContent = 'Link';
+            copyBtn.addEventListener('click', () => copyDirectLink(p.id));
+            rightBtns.appendChild(copyBtn);
+          }
+
           const del = document.createElement('button');
           del.type = 'button';
-          del.className = 'btn btn-danger';
-          del.style.minHeight = '34px';
-          del.style.fontSize = '12px';
+          del.className = 'btn btn-danger btn-sm';
           del.textContent = 'Sofort löschen';
           del.addEventListener('click', () => deletePhoto(p.id));
-          row.append(left, del);
+          rightBtns.appendChild(del);
+
+          row.append(left, rightBtns);
           box.appendChild(row);
         }
         updateCountdowns();
@@ -714,8 +991,79 @@
 
       function renderKiosk(force = false) {
         if (state.view !== 'kiosk') return;
-        const shown = activePhotos().slice(0, state.kioskCount);
-        const key = state.kioskCount + ':' + shown.map((p) => p.id).join(',');
+        const list = activePhotos();
+
+        // Kiosk-Modus 2: Letztes Foto + Persönlicher Link & QR (nur wenn Links aktiviert sind)
+        if (state.kioskMode === 'single' && state.directLinksEnabled) {
+          const latest = list[0] || null;
+          const key = 'single:' + (latest ? latest.id : 'none') + ':' + state.directLinksEnabled;
+          if (!force && key === state.lastKioskKey) { updateCountdowns(); return; }
+          state.lastKioskKey = key;
+
+          const stage = $('kioskStage');
+          $('kioskEmpty').classList.toggle('hidden', Boolean(latest));
+          stage.classList.toggle('hidden', !latest);
+          stage.textContent = '';
+          if (!latest) return;
+
+          stage.className = 'kiosk-stage single-link';
+
+          const frame = document.createElement('div');
+          frame.className = 'kiosk-frame';
+          const img = document.createElement('img');
+          img.src = photoUrl(latest.id);
+          img.alt = 'Neuestes Foto';
+          frame.appendChild(img);
+          stage.appendChild(frame);
+
+          const panel = document.createElement('aside');
+          panel.className = 'kiosk-qr-panel';
+
+          const personalUrl = directPhotoShareUrl(latest.id);
+          const qrBox = document.createElement('div');
+          qrBox.className = 'kiosk-qr-box';
+          const svg = createQrSvgElement(personalUrl);
+          if (svg) {
+            qrBox.appendChild(svg);
+          } else {
+            qrBox.style.color = '#111';
+            qrBox.style.fontSize = '12px';
+            qrBox.textContent = 'QR nicht verfügbar';
+          }
+          panel.appendChild(qrBox);
+
+          const textWrap = document.createElement('div');
+          textWrap.style.display = 'flex';
+          textWrap.style.flexDirection = 'column';
+          textWrap.style.gap = '10px';
+          textWrap.style.width = '100%';
+
+          const title = document.createElement('div');
+          title.className = 'kiosk-qr-title';
+          title.textContent = 'Dein persönliches Foto';
+
+          const sub = document.createElement('div');
+          sub.className = 'kiosk-qr-sub';
+          sub.textContent = 'Scanne den QR-Code mit dem Handy, um genau dieses Bild in voller Qualität zu sichern.';
+
+          const cd = document.createElement('div');
+          cd.className = 'kiosk-qr-cd mono';
+          cd.dataset.cdExpires = String(latest.expiresAt);
+
+          const urlBox = document.createElement('div');
+          urlBox.className = 'kiosk-qr-url mono';
+          urlBox.textContent = personalUrl;
+
+          textWrap.append(title, sub, cd, urlBox);
+          panel.appendChild(textWrap);
+          stage.appendChild(panel);
+          updateCountdowns();
+          return;
+        }
+
+        // Kiosk-Modus 1: Puristisch (nur die letzten 2 oder 3 Fotos, ohne Text/Links)
+        const shown = list.slice(0, state.kioskCount);
+        const key = 'gallery:' + state.kioskCount + ':' + shown.map((p) => p.id).join(',');
         if (!force && key === state.lastKioskKey) return;
         state.lastKioskKey = key;
 
@@ -757,7 +1105,8 @@
         });
         document.querySelectorAll('[data-bar-expires]').forEach((el) => {
           const rem = Math.max(0, Number(el.dataset.barExpires) - now);
-          el.style.transform = 'scaleX(' + Math.max(0, Math.min(1, rem / state.ttlMs)) + ')';
+          const dur = Number(el.dataset.barDuration) || state.ttlMs;
+          el.style.transform = 'scaleX(' + Math.max(0, Math.min(1, rem / dur)) + ')';
           el.classList.toggle('warn', rem <= 30000);
         });
         document.querySelectorAll('[data-warn-expires]').forEach((el) => {
@@ -778,6 +1127,7 @@
       function openLightbox(id) {
         state.lightboxId = id;
         $('lightbox').classList.remove('hidden');
+        $('lbCopyLinkBtn').classList.toggle('hidden', !state.directLinksEnabled);
         $('lbTip').textContent = isIOS()
           ? 'iPhone/iPad: „In Fotos sichern“ tippen → im Menü „Bild sichern“ wählen.'
           : 'Originaldatei ohne Komprimierung — direkt für deine Fotomediathek.';
@@ -786,6 +1136,9 @@
       function closeLightbox() {
         state.lightboxId = null;
         $('lightbox').classList.add('hidden');
+        if (window.location.search.includes('foto=')) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       }
       function updateLightboxMeta() {
         const list = activePhotos();
@@ -793,6 +1146,7 @@
         if (idx < 0) return closeLightbox();
         const p = list[idx];
         $('lbImg').src = photoUrl(p.id);
+        $('lbCopyLinkBtn').classList.toggle('hidden', !state.directLinksEnabled);
         const dims = p.width && p.height ? ' · ' + p.width + '×' + p.height : '';
         $('lbMeta').textContent = fmtTime(p.createdAt) + ' Uhr · Noch ' + fmtCountdown(p.expiresAt - serverNow()) + dims + ' · ' + fmtSize(p.sizeBytes);
         $('lbPrevBtn').classList.toggle('hidden', idx <= 0);
@@ -808,8 +1162,8 @@
           const setup = !state.pinConfigured;
           $('pinTitle').textContent = setup ? 'Team-PIN einmalig festlegen' : 'Einstellungen (Team-PIN)';
           $('pinDesc').textContent = setup
-            ? 'Lege einmalig eine Team-PIN fest, um Upload, Ordner-Automatik und Beamer-Kiosk freizuschalten.'
-            : 'Melde dich mit der Team-PIN an, um Fotos hochzuladen, den Kamera-Ordner zu verbinden oder den Beamer-Kiosk zu starten.';
+            ? 'Lege einmalig eine Team-PIN fest, um Upload, Ordner-Automatik, Speicherdauer und Beamer-Kiosk freizuschalten.'
+            : 'Melde dich mit der Team-PIN an, um Fotos hochzuladen, die Speicherdauer einzustellen oder einen Kiosk-Modus zu starten.';
           $('pinLabel').textContent = setup ? 'Neue Team-PIN (4–32 Zeichen)' : 'Team-PIN';
           $('pinConfirmWrap').classList.toggle('hidden', !setup);
           $('pinConfirmInput').required = setup;
@@ -833,7 +1187,7 @@
 
       async function uploadSingleFile(file) {
         if (!state.teamToken) throw new Error('Bitte zuerst anmelden.');
-        if (file.size > 15 * 1024 * 1024) throw new Error('Größer als 15 MB.');
+        if (file.size > MAX_FILE_BYTES) throw new Error('Größer als 24 MB.');
         const fd = new FormData();
         fd.append('photo', file, file.name);
         const res = await fetch('/api/photos', {
@@ -873,7 +1227,7 @@
         for (const file of Array.from(fileList)) {
           try {
             await uploadSingleFile(file);
-            addLog('uploadLog', file.name, 'Live für 5:00 Min.');
+            addLog('uploadLog', file.name, `Live für ${state.ttlMinutes} Min.`);
           } catch (err) {
             addLog('uploadLog', file.name, err.message, true);
             showToast(err.message, true);
@@ -881,20 +1235,42 @@
         }
       }
 
+      // Sicheres Verschieben nach Archiv/ + Löschen aus Eingang/
+      async function moveFileToArchive(sourceDir, archiveDir, fileName, fileObj) {
+        let targetName = fileName;
+        try {
+          await archiveDir.getFileHandle(targetName);
+          const dot = fileName.lastIndexOf('.');
+          const stamp = '-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '');
+          targetName = dot > 0 ? fileName.slice(0, dot) + stamp + fileName.slice(dot) : fileName + stamp;
+        } catch {}
+        const destHandle = await archiveDir.getFileHandle(targetName, { create: true });
+        const writable = await destHandle.createWritable();
+        try {
+          await writable.write(fileObj);
+          await writable.close();
+        } catch (writeErr) {
+          try { await writable.abort(); } catch {}
+          throw writeErr;
+        }
+        await sourceDir.removeEntry(fileName);
+        return targetName;
+      }
+
       // Automatischer Ordner-Watcher (Mac & Windows in Chrome/Edge)
       async function scanWatchFolder() {
-        if (!state.dirHandle || !state.watching || !state.teamToken) return;
+        if (!state.watchDirHandle || !state.watching || !state.teamToken) return;
         const seen = new Set();
-        const delAfter = $('deleteAfterCheck').checked;
+        const mode = state.activeFolderMode;
         try {
-          for await (const [name, entry] of state.dirHandle.entries()) {
+          for await (const [name, entry] of state.watchDirHandle.entries()) {
             if (entry.kind !== 'file' || name.startsWith('.') || !/\.(jpe?g|png|webp)$/i.test(name)) continue;
             seen.add(name);
             if (inFlight.has(name)) continue;
             const file = await entry.getFile().catch(() => null);
             if (!file || file.size === 0) continue;
             const sig = name + ':' + file.size + ':' + file.lastModified;
-            if (!delAfter && keptUploaded.has(sig)) continue;
+            if (mode === 'keep' && keptUploaded.has(sig)) continue;
 
             const prev = stabilityMap.get(name);
             if (!prev || prev.size !== file.size || prev.lm !== file.lastModified) {
@@ -907,12 +1283,16 @@
               await uploadSingleFile(file);
               state.uploadedViaWatcher += 1;
               stabilityMap.delete(name);
-              if (delAfter) {
-                await state.dirHandle.removeEntry(name);
+
+              if (mode === 'archive' && state.archiveDirHandle) {
+                await moveFileToArchive(state.watchDirHandle, state.archiveDirHandle, name, file);
+                addLog('folderLog', name, 'Hochgeladen & nach Archiv verschoben');
+              } else if (mode === 'delete') {
+                await state.watchDirHandle.removeEntry(name);
                 addLog('folderLog', name, 'Hochgeladen & lokal gelöscht');
               } else {
                 keptUploaded.add(sig);
-                addLog('folderLog', name, 'Hochgeladen (lokal behalten)');
+                addLog('folderLog', name, 'Hochgeladen (im Ordner behalten)');
               }
               updateFolderUI();
             } catch (err) {
@@ -930,19 +1310,39 @@
         }
       }
 
+      function updateFolderModeHint() {
+        const mode = $('folderModeSelect').value;
+        const hint = $('folderModeHint');
+        const btn = $('pickFolderBtn');
+        if (mode === 'archive') {
+          btn.textContent = 'Hauptordner auswählen';
+          hint.textContent = 'Wähle euren übergeordneten Hauptordner (z. B. Fotobox). Darin werden automatisch die Unterordner „Eingang“ (Zielordner für OBS) und „Archiv“ angelegt. Nach jedem Upload wird das Foto von „Eingang“ nach „Archiv“ verschoben.';
+        } else if (mode === 'delete') {
+          btn.textContent = 'Kamera-Ordner auswählen';
+          hint.textContent = 'Wähle direkt den OBS-/Kamera-Ordner. Nach erfolgreichem Upload wird die lokale Datei sofort gelöscht.';
+        } else {
+          btn.textContent = 'Kamera-Ordner auswählen';
+          hint.textContent = 'Wähle direkt den OBS-/Kamera-Ordner. Neue Fotos werden hochgeladen und bleiben unverändert im Ordner liegen.';
+        }
+      }
+
       function updateFolderUI() {
-        const connected = Boolean(state.dirHandle);
+        const connected = Boolean(state.watchDirHandle);
         $('pickFolderBtn').classList.toggle('hidden', connected);
         $('pauseFolderBtn').classList.toggle('hidden', !connected);
         $('stopFolderBtn').classList.toggle('hidden', !connected);
-        $('deleteAfterCheck').disabled = connected;
+        $('folderModeSelect').disabled = connected;
         $('pauseFolderBtn').textContent = state.watching ? 'Pausieren' : 'Fortsetzen';
-        $('folderStatus').textContent = connected
-          ? 'Ordner: ' + state.dirHandle.name + ' · ' + (state.watching ? 'Aktiv' : 'Pausiert') + ' · ' + state.uploadedViaWatcher + ' übertragen'
-          : '';
+        if (!connected) {
+          $('folderStatus').textContent = '';
+          return;
+        }
+        const pathLabel = state.activeFolderMode === 'archive'
+          ? state.rootDirHandle.name + '/Eingang → Archiv'
+          : state.rootDirHandle.name;
+        $('folderStatus').textContent = `${pathLabel} · ${state.watching ? 'Aktiv' : 'Pausiert'} · ${state.uploadedViaWatcher} übertragen`;
       }
 
-      // Kiosk Auto-Hide Bar
       function revealKioskBar() {
         $('kioskBar').classList.remove('hide');
         $('kioskView').classList.remove('idle');
@@ -959,6 +1359,8 @@
       $('settingsBtn').addEventListener('click', () => setView('settings'));
       $('privacyLink').addEventListener('click', () => setView('privacy'));
       $('privacyBackBtn').addEventListener('click', () => setView('gallery'));
+      $('folderModeSelect').addEventListener('change', updateFolderModeHint);
+      updateFolderModeHint();
 
       $('pinForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -983,8 +1385,9 @@
           $('pinInput').value = '';
           $('pinConfirmInput').value = '';
           renderSettingsAuth();
+          syncOptionsAndKioskControls();
           renderGallery();
-          showToast('Einstellungen freigeschaltet.');
+          showToast('Admin-Einstellungen freigeschaltet.');
         } catch (err) {
           $('pinError').textContent = err.message;
           $('pinError').classList.remove('hidden');
@@ -995,7 +1398,10 @@
         const tok = state.teamToken;
         state.teamToken = null;
         state.watching = false;
-        state.dirHandle = null;
+        state.rootDirHandle = null;
+        state.watchDirHandle = null;
+        state.archiveDirHandle = null;
+        clearInterval(watcherInterval);
         updateFolderUI();
         if (tok) fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }).catch(() => {});
         renderSettingsAuth();
@@ -1008,10 +1414,61 @@
           document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
           $('tabUpload').classList.toggle('hidden', btn.dataset.tab !== 'upload');
+          $('tabOptions').classList.toggle('hidden', btn.dataset.tab !== 'options');
           $('tabKiosk').classList.toggle('hidden', btn.dataset.tab !== 'kiosk');
+          syncOptionsAndKioskControls();
         });
       });
 
+      // Optionen: Speicherdauer & Persönliche Links
+      document.querySelectorAll('#ttlPresets .preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          $('ttlCustomInput').value = btn.dataset.min;
+          document.querySelectorAll('#ttlPresets .preset-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      $('ttlCustomInput').addEventListener('input', () => {
+        const val = Number($('ttlCustomInput').value);
+        document.querySelectorAll('#ttlPresets .preset-btn').forEach((b) => {
+          b.classList.toggle('active', Number(b.dataset.min) === val);
+        });
+      });
+
+      $('saveOptionsBtn').addEventListener('click', async () => {
+        if (!state.teamToken) return;
+        const ttlMinutes = Number.parseInt($('ttlCustomInput').value, 10);
+        const directLinksEnabled = $('directLinksToggle').checked;
+        if (!Number.isFinite(ttlMinutes) || ttlMinutes < 1 || ttlMinutes > 60) {
+          showToast('Bitte eine Speicherdauer zwischen 1 und 60 Minuten eingeben.', true);
+          return;
+        }
+        try {
+          const res = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + state.teamToken,
+            },
+            body: JSON.stringify({ ttlMinutes, directLinksEnabled }),
+          });
+          const data = await res.json();
+          if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); return; }
+          if (!res.ok) throw new Error(data.error || 'Speichern fehlgeschlagen.');
+          state.ttlMinutes = data.ttlMinutes;
+          state.ttlMs = data.ttlMs;
+          state.directLinksEnabled = data.directLinksEnabled;
+          syncTtlLabels();
+          syncOptionsAndKioskControls();
+          renderAll();
+          showToast(`Gespeichert: ${data.ttlMinutes} Min. · Persönliche Links ${data.directLinksEnabled ? 'aktiv' : 'komplett deaktiviert'}.`);
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      });
+
+      // Manueller Upload
       $('selectFilesBtn').addEventListener('click', () => $('fileInput').click());
       $('openCameraBtn').addEventListener('click', () => $('cameraInput').click());
       $('fileInput').addEventListener('change', (e) => { handleManualFiles(e.target.files); e.target.value = ''; });
@@ -1021,28 +1478,47 @@
       dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
       dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('drag'); handleManualFiles(e.dataTransfer.files); });
 
+      // Ordner-Watcher starten
       $('pickFolderBtn').addEventListener('click', async () => {
         $('folderWarning').classList.add('hidden');
         if (!window.showDirectoryPicker) {
-          $('folderWarning').textContent = 'Bitte Chrome oder Edge auf Mac/Windows nutzen – Safari/Firefox erlauben kein automatisches Ordner-Löschen im Browser.';
+          $('folderWarning').textContent = 'Bitte Chrome oder Edge auf Mac/Windows nutzen – Safari/Firefox erlauben keinen direkten Ordner-Zugriff im Browser.';
           $('folderWarning').classList.remove('hidden');
           return;
         }
         try {
-          const mode = $('deleteAfterCheck').checked ? 'readwrite' : 'read';
-          const handle = await window.showDirectoryPicker({ mode });
-          if (mode === 'readwrite' && handle.requestPermission) {
-            const p = await handle.requestPermission({ mode: 'readwrite' });
-            if (p !== 'granted') throw new Error('Schreib-/Löschfreigabe für den Ordner wurde verweigert.');
+          const mode = $('folderModeSelect').value;
+          const permMode = mode === 'keep' ? 'read' : 'readwrite';
+          const rootHandle = await window.showDirectoryPicker({ mode: permMode });
+          if (permMode === 'readwrite' && rootHandle.requestPermission) {
+            const p = await rootHandle.requestPermission({ mode: 'readwrite' });
+            if (p !== 'granted') throw new Error('Schreib-/Verschiebefreigabe für den Ordner wurde verweigert.');
           }
-          state.dirHandle = handle;
+
+          let watchHandle = rootHandle;
+          let archiveHandle = null;
+          if (mode === 'archive') {
+            watchHandle = await rootHandle.getDirectoryHandle('Eingang', { create: true });
+            archiveHandle = await rootHandle.getDirectoryHandle('Archiv', { create: true });
+          }
+
+          state.activeFolderMode = mode;
+          state.rootDirHandle = rootHandle;
+          state.watchDirHandle = watchHandle;
+          state.archiveDirHandle = archiveHandle;
           state.watching = true;
           stabilityMap.clear();
+          keptUploaded.clear();
           updateFolderUI();
           clearInterval(watcherInterval);
           watcherInterval = setInterval(scanWatchFolder, 1500);
           scanWatchFolder();
-          showToast('Ordner „' + handle.name + '“ wird überwacht.');
+
+          showToast(
+            mode === 'archive'
+              ? `Aktiv: ${rootHandle.name}/Eingang → Archiv`
+              : `Ordner „${rootHandle.name}“ wird überwacht.`
+          );
         } catch (err) {
           if (err && err.name === 'AbortError') return;
           $('folderWarning').textContent = err.message || 'Ordner konnte nicht geöffnet werden.';
@@ -1052,13 +1528,49 @@
 
       $('pauseFolderBtn').addEventListener('click', () => { state.watching = !state.watching; updateFolderUI(); });
       $('stopFolderBtn').addEventListener('click', () => {
-        state.watching = false; state.dirHandle = null; clearInterval(watcherInterval); updateFolderUI();
+        state.watching = false;
+        state.rootDirHandle = null;
+        state.watchDirHandle = null;
+        state.archiveDirHandle = null;
+        clearInterval(watcherInterval);
+        updateFolderUI();
       });
 
-      $('startKioskBtn').addEventListener('click', () => setView('kiosk'));
-      $('kioskExitBtn').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); setView('settings'); });
-      $('kiosk2Btn').addEventListener('click', () => { state.kioskCount = 2; $('kiosk2Btn').classList.add('active'); $('kiosk3Btn').classList.remove('active'); renderKiosk(true); });
-      $('kiosk3Btn').addEventListener('click', () => { state.kioskCount = 3; $('kiosk3Btn').classList.add('active'); $('kiosk2Btn').classList.remove('active'); renderKiosk(true); });
+      // Beide Kiosk-Modi starten & steuern
+      $('startKioskGalleryBtn').addEventListener('click', () => {
+        state.kioskMode = 'gallery';
+        setView('kiosk');
+      });
+      $('startKioskSingleBtn').addEventListener('click', () => {
+        if (!state.directLinksEnabled) {
+          showToast('Bitte zuerst persönliche Links aktivieren.', true);
+          return;
+        }
+        state.kioskMode = 'single';
+        setView('kiosk');
+      });
+      $('kioskExitBtn').addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        setView('settings');
+      });
+      $('kiosk2Btn').addEventListener('click', () => {
+        state.kioskMode = 'gallery';
+        state.kioskCount = 2;
+        updateKioskBarActiveState();
+        renderKiosk(true);
+      });
+      $('kiosk3Btn').addEventListener('click', () => {
+        state.kioskMode = 'gallery';
+        state.kioskCount = 3;
+        updateKioskBarActiveState();
+        renderKiosk(true);
+      });
+      $('kioskSingleBtn').addEventListener('click', () => {
+        if (!state.directLinksEnabled) return;
+        state.kioskMode = 'single';
+        updateKioskBarActiveState();
+        renderKiosk(true);
+      });
       $('kioskFsBtn').addEventListener('click', () => {
         if (!document.fullscreenElement) $('kioskView').requestFullscreen().catch(() => {});
         else document.exitFullscreen().catch(() => {});
@@ -1066,6 +1578,7 @@
       $('kioskView').addEventListener('mousemove', revealKioskBar);
       $('kioskView').addEventListener('touchstart', revealKioskBar);
 
+      // Lightbox
       $('lbCloseBtn').addEventListener('click', closeLightbox);
       $('lbPrevBtn').addEventListener('click', () => {
         const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
@@ -1074,6 +1587,9 @@
       $('lbNextBtn').addEventListener('click', () => {
         const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
         if (i >= 0 && i < list.length - 1) { state.lightboxId = list[i + 1].id; updateLightboxMeta(); }
+      });
+      $('lbCopyLinkBtn').addEventListener('click', () => {
+        if (state.lightboxId) copyDirectLink(state.lightboxId);
       });
       $('lbSaveBtn').addEventListener('click', () => {
         const p = activePhotos().find((x) => x.id === state.lightboxId);
@@ -1091,13 +1607,13 @@
           if (e.key === 'ArrowRight') $('lbNextBtn').click();
         } else if (state.view === 'kiosk') {
           if (e.key === 'Escape' && !document.fullscreenElement) setView('settings');
+          if (e.key === '1' && state.directLinksEnabled) $('kioskSingleBtn').click();
           if (e.key === '2') $('kiosk2Btn').click();
           if (e.key === '3') $('kiosk3Btn').click();
           if (e.key.toLowerCase() === 'f') $('kioskFsBtn').click();
         }
       });
 
-      // Start live sync (alle 2 Sek.) + 1-Sekunden-Countdown
       fetchAuthStatus();
       fetchPhotos();
       setInterval(() => { if (document.visibilityState === 'visible') fetchPhotos(); }, 2000);
