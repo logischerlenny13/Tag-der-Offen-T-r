@@ -1,1628 +1,2908 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Tag der offenen Tür — Live-Fotogalerie</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Tag der offenen Tür – Live-Fotos</title>
+  <meta name="description" content="Aktuelle Fotos vom Tag der offenen Tür direkt ansehen und in Originalqualität speichern." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Lokale QR-Code-Erzeugung im Browser (keine Foto-Links an Drittserver) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" defer></script>
   <style>
     :root {
-      --bg: #FAFAFA;
-      --surface: #FFFFFF;
-      --border: #E4E4E7;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-subtle: #f4f4f5;
+      --border: #e4e4e7;
+      --border-strong: #d4d4d8;
       --text: #111111;
-      --muted: #52525B;
-      --accent: #2563EB;
-      --accent-hover: #1D4ED8;
-      --warn: #B45309;
-      --danger: #B91C1C;
+      --text-muted: #52525b;
+      --text-soft: #71717a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: #eff6ff;
+      --warn: #d97706;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --ok: #15803d;
+      --ok-soft: #f0fdf4;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      min-height: 100%;
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      max-width: 100%;
+      overflow-x: clip;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      max-width: 100%;
+      overflow-x: clip;
+      font-family: var(--font-sans);
       background: var(--bg);
       color: var(--text);
-      font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+      overflow-wrap: break-word;
+      display: flex;
+      flex-direction: column;
     }
-    body { display: flex; flex-direction: column; min-height: 100dvh; }
-    button, input, select { font: inherit; color: inherit; }
-    button { cursor: pointer; border: none; background: none; }
-    button:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
-    .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
-    .serif { font-family: "Fraunces", Georgia, serif; }
-    .hidden { display: none !important; }
 
-    /* Topbar */
-    header {
-      position: sticky; top: 0; z-index: 30;
-      border-bottom: 1px solid rgba(228,228,231,0.9);
-      background: rgba(250,250,250,0.92);
-      backdrop-filter: blur(10px);
+    body.kiosk-active {
+      background: #050505;
+      color: #ffffff;
+      overflow: hidden;
     }
-    .header-inner {
-      max-width: 1280px; margin: 0 auto; height: 64px;
-      padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+
+    img {
+      display: block;
+      max-width: 100%;
     }
-    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
-    .brand:hover { color: var(--accent); }
-    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    button, input, select {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      background: none;
+      padding: 0;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      text-wrap: balance;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0;
+      overflow-wrap: break-word;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Header (kompakt & sicher auf 360px+) */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(250, 250, 250, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      min-height: 56px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 6px 0;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Buttons */
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 40px; padding: 8px 16px; border-radius: 9px;
-      font-size: 14px; font-weight: 500; white-space: nowrap; transition: background .15s, border-color .15s, color .15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease, opacity 140ms ease;
+      max-width: 100%;
     }
-    .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-    .btn-outline:hover { background: #F4F4F5; border-color: #D4D4D8; }
-    .btn-dark { background: var(--text); color: #FFF; }
-    .btn-dark:hover { background: var(--accent); }
-    .btn-primary { background: var(--accent); color: #FFF; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-danger { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
-    .btn-danger:hover { border-color: #FECACA; background: #FEF2F2; color: var(--danger); }
-    .btn-ghost { color: var(--muted); padding: 8px 10px; }
-    .btn-ghost:hover { color: var(--text); }
-    .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 12px; }
 
-    /* Main Layout */
-    main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 40px 20px 88px; }
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-dark {
+      background: #111111;
+      color: #ffffff;
+    }
+
+    .btn-dark:hover:not(:disabled) {
+      background: #27272a;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface-subtle);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #fee2e2;
+    }
+
+    .btn-compact {
+      min-height: 40px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* Main Container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      flex: 1;
+    }
+
+    .container-narrow {
+      max-width: 720px;
+    }
+
+    /* Gallery Intro */
     .page-head {
-      display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;
-      padding-bottom: 28px;
+      margin-bottom: 20px;
     }
-    h1 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; letter-spacing: -0.025em; }
-    .submeta { font-size: 12px; color: var(--muted); }
 
-    /* Gallery Grid */
-    .grid {
-      display: grid; gap: 24px;
-      grid-template-columns: repeat(1, minmax(0, 1fr));
+    .page-head h1 {
+      font-size: clamp(1.45rem, 5vw, 2.05rem);
+      font-weight: 700;
+      line-height: 1.18;
+      margin-bottom: 6px;
     }
-    @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-      overflow: hidden; display: flex; flex-direction: column;
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 10px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
     }
-    .thumb-wrap {
-      position: relative; aspect-ratio: 4 / 3; background: #F4F4F5; overflow: hidden; cursor: zoom-in;
+
+    .meta-sep {
+      color: var(--border-strong);
+      user-select: none;
     }
-    .thumb-wrap img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-      transition: transform .25s ease;
+
+    /* Photo Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: 18px;
     }
-    .card:hover .thumb-wrap img { transform: scale(1.02); }
+
+    .photo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .photo-thumb-btn {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #f1f1f3;
+      overflow: hidden;
+    }
+
+    .photo-thumb-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 220ms ease;
+    }
+
+    .photo-thumb-btn:hover img {
+      transform: scale(1.015);
+    }
+
     .progress-track {
-      position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,0.1);
+      width: 100%;
+      height: 3px;
+      background: var(--surface-subtle);
+      overflow: hidden;
     }
-    .progress-fill {
-      height: 100%; background: var(--accent); transform-origin: left center; transition: background .2s;
+
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent);
+      transform-origin: left center;
+      transition: transform 0.9s linear, background-color 200ms ease;
     }
-    .progress-fill.warn { background: var(--warn); }
-    .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-    .card-meta {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      font-size: 12px; color: var(--muted);
+
+    .progress-bar.warn {
+      background: var(--warn);
     }
-    .card-meta .warn-text { color: var(--warn); font-weight: 600; }
-    .card-actions { display: flex; gap: 8px; }
-    .card-actions .btn-save { flex: 1; min-height: 42px; font-size: 13px; }
-    .card-actions .btn-icon { min-width: 42px; min-height: 42px; padding: 0 11px; font-size: 12px; }
+
+    .progress-bar.danger {
+      background: var(--danger);
+    }
+
+    .photo-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .photo-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px 10px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      min-width: 0;
+    }
+
+    .photo-countdown {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .photo-countdown.warn {
+      color: var(--warn);
+    }
+
+    .photo-countdown.danger {
+      color: var(--danger);
+    }
+
+    .photo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .photo-actions .btn-save {
+      flex: 1 1 160px;
+    }
+
+    .photo-actions .btn-copy {
+      flex: 0 1 auto;
+    }
 
     /* Empty State */
     .empty-box {
-      min-height: 52vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 18px; padding: 48px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px 20px;
+      text-align: center;
+      max-width: 560px;
+      margin: 24px auto;
     }
-    .empty-box h2 { font-size: 26px; font-weight: 400; margin-bottom: 10px; }
-    .empty-box p { max-width: 380px; font-size: 14px; line-height: 1.6; color: var(--muted); }
 
-    /* Panel / Settings / Privacy */
-    .narrow { max-width: 820px; margin: 0 auto; }
-    .pin-card {
-      max-width: 420px; margin: 32px auto 0; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+    .empty-box h2 {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
     }
-    .pin-card h1 { font-size: 22px; margin-bottom: 8px; }
-    .pin-card p { font-size: 14px; line-height: 1.6; color: var(--muted); margin-bottom: 20px; }
-    .field { margin-bottom: 14px; }
-    .field label { display: block; font-size: 12px; font-weight: 500; color: #3F3F46; margin-bottom: 6px; }
-    .field input, .select-input {
-      width: 100%; height: 42px; padding: 0 12px; border-radius: 9px;
-      border: 1px solid #D4D4D8; background: #FFF; font-size: 14px;
+
+    .empty-box p {
+      color: var(--text-muted);
+      font-size: 0.94rem;
     }
-    .field input:focus, .select-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
-    .err-msg { color: var(--danger); font-size: 12px; font-weight: 500; margin-bottom: 12px; }
-    .warn-box {
-      border: 1px solid #FDE68A; background: #FFFBEB; color: #92400E;
-      border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.5; margin-top: 14px;
+
+    /* Direct Single Photo View (?foto=...) */
+    .direct-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    .info-box {
-      border: 1px solid var(--border); background: #FAFAFA; color: #3F3F46;
-      border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.5; margin-top: 10px;
+
+    .direct-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .direct-media {
+      background: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 60dvh;
+      cursor: zoom-in;
+    }
+
+    .direct-media img {
+      max-width: 100%;
+      max-height: 60dvh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .direct-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .direct-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 560px) {
+      .direct-actions {
+        grid-template-columns: 1fr auto;
+      }
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      background: var(--bg);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 16px;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 500;
+      padding: 6px 0;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .footer-link:hover {
+      color: var(--text);
+    }
+
+    /* Admin & Settings */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .admin-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
     .tabs {
-      display: inline-flex; flex-wrap: wrap; gap: 4px; background: #E4E4E7; padding: 4px;
-      border-radius: 12px; margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 18px;
     }
-    .tab-btn {
-      min-height: 36px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted);
-    }
-    .tab-btn.active { background: #FFF; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 
-    .box {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-      padding: 24px; margin-bottom: 24px;
+    .tab-btn {
+      min-height: 44px;
+      padding: 8px 6px;
+      border-radius: var(--radius-sm);
+      font-size: clamp(0.78rem, 3.2vw, 0.9rem);
+      font-weight: 600;
+      color: var(--text-muted);
+      line-height: 1.2;
+      text-align: center;
+      transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
     }
-    .box h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-    .box p { font-size: 13px; line-height: 1.6; color: var(--muted); }
-    .kiosk-grid-cards {
-      display: grid; gap: 20px; grid-template-columns: 1fr;
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
-    @media (min-width: 720px) { .kiosk-grid-cards { grid-template-columns: 1fr 1fr; } }
-    .kiosk-grid-cards .box { margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .section-sub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 16px; /* Verhindert Auto-Zoom auf iOS */
+    }
+
+    .input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
 
     .dropzone {
-      border: 1px dashed #D4D4D8; border-radius: 16px; background: #FFF;
-      padding: 36px 20px; text-align: center; transition: border-color .15s, background .15s;
-      margin-bottom: 24px;
+      border: 1.5px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 24px 16px;
+      text-align: center;
+      background: var(--bg);
+      transition: border-color 140ms ease, background-color 140ms ease;
     }
-    .dropzone.drag { border-color: var(--accent); background: rgba(37,99,235,0.04); }
-    .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
-    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .mode-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mode-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .mode-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .mode-option input[type="radio"] {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+    }
+
+    .mode-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .mode-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      margin-bottom: 2px;
+    }
+
+    .mode-desc {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    /* TTL Presets */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    @media (min-width: 560px) {
+      .preset-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
     .preset-btn {
-      min-height: 36px; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
-      border: 1px solid var(--border); background: #FFF; color: var(--text);
+      min-height: 44px;
+      padding: 8px 6px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
     }
-    .preset-btn.active { background: var(--text); border-color: var(--text); color: #FFF; }
-    .checkbox-row {
-      display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; font-size: 13px; color: #3F3F46; cursor: pointer;
-    }
-    .checkbox-row input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--accent); }
-    .list {
-      margin-top: 16px; border: 1px solid var(--border); border-radius: 12px;
-      overflow: hidden; background: #FFF;
-    }
-    .list-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px;
-    }
-    .list-item:last-child { border-bottom: none; }
-    .list-thumb { width: 56px; height: 42px; border-radius: 6px; object-fit: cover; background: #F4F4F5; flex-shrink: 0; }
-    .list-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Footer */
-    footer { border-top: 1px solid rgba(228,228,231,0.8); background: var(--bg); }
-    .footer-inner {
-      max-width: 1280px; margin: 0 auto; padding: 24px 20px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      font-size: 12px; color: var(--muted);
+    .preset-btn.active {
+      background: #111111;
+      color: #ffffff;
+      border-color: #111111;
     }
-    .footer-link { font-weight: 500; color: #3F3F46; }
-    .footer-link:hover { color: var(--text); text-decoration: underline; }
 
-    /* Lightbox */
+    .inline-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .inline-row > * {
+      min-width: 0;
+    }
+
+    /* Toggle Switch */
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .toggle-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 30px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #d4d4d8;
+      border-radius: 999px;
+      transition: background-color 180ms ease;
+      cursor: pointer;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 3px;
+      top: 3px;
+      background: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform 180ms ease;
+    }
+
+    .switch input:checked + .slider {
+      background: var(--accent);
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(22px);
+    }
+
+    /* Copyable URL Box (kein Abschneiden auf Handys) */
+    .url-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-top: 10px;
+    }
+
+    .url-code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    @media (min-width: 600px) {
+      .url-box {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .url-box .btn {
+        flex-shrink: 0;
+      }
+    }
+
+    /* Admin Photo List */
+    .admin-list {
+      display: flex;
+      flex-direction: column;
+      divide-y: 1px solid var(--border);
+    }
+
+    .admin-photo-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .admin-photo-row:first-child {
+      border-top: 0;
+      padding-top: 4px;
+    }
+
+    .admin-thumb {
+      width: 56px;
+      height: 44px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--surface-subtle);
+      flex-shrink: 0;
+    }
+
+    .admin-photo-info {
+      flex: 1 1 140px;
+      min-width: 0;
+    }
+
+    .admin-photo-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-photo-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .admin-photo-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
+    /* Notice / Alert */
+    .notice {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    .notice-ok {
+      background: var(--ok-soft);
+      border-color: #bbf7d0;
+      color: var(--ok);
+    }
+
+    .notice-warn {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .notice-err {
+      background: var(--danger-soft);
+      border-color: #fecaca;
+      color: var(--danger);
+    }
+
+    /* Lightbox (iPhone & Android Safe) */
     .lightbox {
-      position: fixed; inset: 0; z-index: 60; background: rgba(8,8,10,0.96); color: #FFF;
-      display: flex; flex-direction: column;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(8, 8, 10, 0.96);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .lb-top, .lb-bottom {
-      padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    }
-    .lb-bottom { border-top: 1px solid rgba(255,255,255,0.1); }
-    .lb-stage {
-      flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
-      position: relative; padding: 8px 48px;
-    }
-    .lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
-    .lb-nav {
-      position: absolute; top: 50%; transform: translateY(-50%);
-      width: 44px; height: 44px; border-radius: 999px; background: rgba(255,255,255,0.12); color: #FFF; font-size: 20px;
-    }
-    .lb-nav:hover { background: rgba(255,255,255,0.25); }
-    .lb-prev { left: 12px; }
-    .lb-next { right: 12px; }
 
-    /* Dark Beamer Kiosk (Modus 1: Puristisch 2–3 Fotos · Modus 2: Letztes Foto + Persönlicher Link & QR) */
-    .kiosk {
-      position: fixed; inset: 0; z-index: 50; background: #050505; color: #FFF;
-      height: 100dvh; width: 100vw; padding: 24px; display: flex; flex-direction: column; overflow: hidden;
+    .lightbox-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      min-width: 0;
     }
-    .kiosk.idle { cursor: none; }
-    .kiosk-stage { flex: 1; min-height: 0; width: 100%; display: grid; gap: 20px; }
-    .kiosk-stage.count-1 { grid-template-columns: 1fr; place-items: center; }
-    .kiosk-stage.count-2 { grid-template-columns: 1fr 1fr; }
-    .kiosk-stage.count-3 { grid-template-columns: 7fr 5fr; }
-    .kiosk-stage.single-link { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; gap: 28px; }
-    .kiosk-side { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; min-height: 0; }
-    .kiosk-frame {
-      width: 100%; height: 100%; min-height: 0; overflow: hidden;
-      border-radius: 16px; border: 1px solid #27272A; background: #0D0D10;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .kiosk-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .kiosk-stage.count-1 .kiosk-frame { max-width: 92vw; max-height: 90dvh; }
-    .kiosk-stage.count-1 .kiosk-frame img,
-    .kiosk-stage.single-link .kiosk-frame img { object-fit: contain; }
 
-    /* Persönliche Link- & QR-Karte in Kiosk-Modus 2 */
+    .lightbox-meta {
+      min-width: 0;
+      flex: 1;
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.85);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lightbox-close {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .lightbox-stage {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      position: relative;
+    }
+
+    .lightbox-stage img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .lightbox-bottom {
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .lightbox-bottom .btn {
+      flex: 1 1 140px;
+      max-width: 260px;
+    }
+
+    .btn-ghost-dark {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    /* Kiosk Mode (Beamer & OBS) */
+    .kiosk-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: #050505;
+      color: #ffffff;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Kiosk 1: Puristische Galerie (2 oder 3 Fotos) */
+    .kiosk-gallery {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .kiosk-gallery.cols-1 { grid-template-columns: 1fr; }
+    .kiosk-gallery.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kiosk-gallery.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    @media (max-width: 720px) {
+      .kiosk-gallery.cols-2,
+      .kiosk-gallery.cols-3 {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+      }
+    }
+
+    .kiosk-photo-slot {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #0c0c0e;
+    }
+
+    .kiosk-photo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Kiosk 2: Neuestes Foto + Persönlicher QR-Code (OBS Szene 2) */
+    .kiosk-single {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      padding: clamp(16px, 2.5vw, 36px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(18px, 3vw, 44px);
+    }
+
+    .kiosk-single-media {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kiosk-single-media img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+
     .kiosk-qr-panel {
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      text-align: center; padding: 28px 24px; border-radius: 18px;
-      border: 1px solid #27272A; background: #111114; gap: 18px;
+      width: clamp(270px, 27vw, 390px);
+      flex-shrink: 0;
+      background: #ffffff;
+      color: #111111;
+      border-radius: 20px;
+      padding: clamp(18px, 2vw, 28px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     }
+
+    .kiosk-qr-title {
+      font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+      font-weight: 700;
+      color: #111111;
+      line-height: 1.25;
+    }
+
+    .kiosk-qr-sub {
+      font-size: 0.9rem;
+      color: #52525b;
+      line-height: 1.4;
+    }
+
     .kiosk-qr-box {
-      width: 230px; height: 230px; padding: 14px; border-radius: 14px;
-      background: #FFFFFF; display: flex; align-items: center; justify-content: center;
+      width: min(240px, 100%);
+      aspect-ratio: 1 / 1;
+      padding: 10px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .kiosk-qr-box svg { width: 100%; height: 100%; display: block; }
-    .kiosk-qr-title { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; color: #FAFAFA; }
-    .kiosk-qr-sub { font-size: 13px; line-height: 1.5; color: #A1A1AA; }
+
+    .kiosk-qr-box svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
     .kiosk-qr-url {
-      width: 100%; padding: 10px 12px; border-radius: 10px;
-      background: #09090B; border: 1px solid #27272A;
-      font-size: 11px; color: #D4D4D8; word-break: break-all; line-height: 1.4;
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: #27272a;
+      background: #f4f4f5;
+      padding: 8px 10px;
+      border-radius: 8px;
+      word-break: break-all;
+      line-height: 1.35;
     }
-    .kiosk-qr-cd { font-size: 13px; color: #E4E4E7; }
+
+    .kiosk-qr-timer {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    @media (max-width: 860px) {
+      .kiosk-single {
+        flex-direction: column;
+        overflow-y: auto;
+        justify-content: flex-start;
+      }
+      .kiosk-single-media {
+        width: 100%;
+        height: auto;
+        max-height: 48dvh;
+        flex: 0 0 auto;
+      }
+      .kiosk-qr-panel {
+        width: 100%;
+        max-width: 360px;
+      }
+    }
 
     .kiosk-empty {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      color: rgba(255, 255, 255, 0.72);
+      gap: 8px;
     }
-    .kiosk-empty h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 400; color: #E4E4E7; }
-    .kiosk-empty p { margin-top: 12px; font-size: 14px; color: #71717A; }
+
     .kiosk-bar {
-      position: fixed; right: 20px; bottom: 20px; z-index: 55;
-      display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px;
-      border-radius: 12px; background: rgba(17,17,19,0.92); border: 1px solid #27272A;
-      transition: opacity .25s;
+      position: fixed;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 60;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(20, 20, 24, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(10px);
+      transition: opacity 220ms ease, transform 220ms ease;
+      max-width: calc(100vw - 32px);
     }
-    .kiosk-bar.hide { opacity: 0; pointer-events: none; }
+
+    .kiosk-bar.hide {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+    }
+
     .kiosk-bar button {
-      min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 500; color: #D4D4D8;
+      min-height: 38px;
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
     }
-    .kiosk-bar button.active { background: #FFF; color: #111; }
-    .kiosk-bar button:hover:not(.active) { background: #27272A; color: #FFF; }
-    @media (max-width: 960px) {
-      .kiosk-stage.count-2, .kiosk-stage.count-3, .kiosk-stage.single-link { grid-template-columns: 1fr; }
-      .kiosk-side { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
-      .kiosk-qr-panel { flex-direction: row; text-align: left; padding: 16px; }
-      .kiosk-qr-box { width: 132px; height: 132px; flex-shrink: 0; padding: 8px; }
+
+    .kiosk-bar button.active {
+      background: var(--accent);
     }
 
     /* Toast */
     .toast {
-      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 80;
-      background: #111111; color: #FFF; padding: 10px 16px; border-radius: 10px;
-      font-size: 13px; font-weight: 500; max-width: 92vw; text-align: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      z-index: 80;
+      background: #111111;
+      color: #ffffff;
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
-    .toast.err { background: var(--danger); }
+
+    /* Privacy Text */
+    .prose {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: 0.94rem;
+      color: var(--text-muted);
+    }
+
+    .prose h2 {
+      font-size: 1.05rem;
+      color: var(--text);
+      margin-top: 6px;
+    }
+
+    .log-list {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      max-height: 170px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
   </style>
 </head>
 <body>
   <!-- Header -->
-  <header id="appHeader">
-    <div class="header-inner">
-      <button type="button" class="brand" id="brandBtn">Tag der offenen Tür</button>
-      <div class="header-actions">
-        <button type="button" class="btn btn-ghost hidden" id="backGalleryBtn">← Zur Galerie</button>
-        <button type="button" class="btn btn-outline" id="settingsBtn">⚙ Einstellungen</button>
+  <header id="appHeader" class="topbar">
+    <div class="topbar-inner">
+      <a href="/" id="brandLink" class="brand">Tag der offenen Tür</a>
+      <div class="topbar-actions">
+        <button id="openSettingsBtn" type="button" class="btn btn-secondary btn-compact" aria-label="Einstellungen öffnen">
+          <span aria-hidden="true">⚙</span>
+          <span>Einstellungen</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- View 1: Startseite (Nur Fotos zum Anschauen & Herunterladen) -->
-  <main id="viewGallery">
+  <!-- View 1: Öffentliche Live-Galerie -->
+  <main id="galleryView" class="container">
     <div class="page-head">
       <h1>Aktuelle Fotos</h1>
-      <span class="submeta mono" id="galleryStats">0 / 30 aktiv · 5 Min. verfügbar</span>
+      <div id="galleryMeta" class="meta-line tabular">
+        <span>Lade Fotos…</span>
+      </div>
     </div>
+    <div id="galleryGrid" class="gallery-grid"></div>
     <div id="galleryEmpty" class="empty-box hidden">
-      <h2 class="serif">Gerade sind keine Fotos aktiv</h2>
-      <p id="emptyDesc">Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils 5 Minuten in voller Qualität zum Herunterladen verfügbar.</p>
+      <h2>Aktuell keine Fotos online</h2>
+      <p id="galleryEmptyText">Sobald ein neues Foto aufgenommen wird, erscheint es hier automatisch in Originalqualität.</p>
     </div>
-    <div id="galleryGrid" class="grid"></div>
   </main>
 
-  <!-- View 2: Admin-Terminal / Einstellungen (PIN-geschützt) -->
-  <main id="viewSettings" class="hidden">
-    <!-- PIN Login / Erstsetup -->
-    <div id="pinGate" class="pin-card">
-      <h1 id="pinTitle">Einstellungen (Team-PIN)</h1>
-      <p id="pinDesc">Melde dich mit der Team-PIN an, um Fotos hochzuladen, die Speicherdauer einzustellen oder einen Kiosk-Modus zu starten.</p>
-      <form id="pinForm">
-        <div class="field">
-          <label for="pinInput" id="pinLabel">Team-PIN</label>
-          <input id="pinInput" type="password" autocomplete="current-password" required placeholder="Team-PIN eingeben" />
-        </div>
-        <div class="field hidden" id="pinConfirmWrap">
-          <label for="pinConfirmInput">Team-PIN bestätigen</label>
-          <input id="pinConfirmInput" type="password" autocomplete="new-password" placeholder="PIN wiederholen" />
-        </div>
-        <div id="pinError" class="err-msg hidden"></div>
-        <button type="submit" class="btn btn-primary" style="width:100%" id="pinSubmitBtn">Anmelden</button>
-      </form>
-    </div>
-
-    <!-- Eingeloggtes Admin-Terminal -->
-    <div id="settingsHub" class="narrow hidden">
-      <div class="page-head" style="border-bottom:1px solid var(--border); margin-bottom:24px;">
-        <div>
-          <h1>Admin-Einstellungen</h1>
-          <p class="submeta" style="margin-top:4px;">Foto-Upload, Archiv-Ordner, Speicherdauer, persönliche Links und beide Kiosk-Modi.</p>
-        </div>
-        <button type="button" class="btn btn-outline" id="logoutBtn">Abmelden</button>
+  <!-- View 2: Direkter Einzelbild-Link (?foto=...) -->
+  <main id="directView" class="container hidden">
+    <div class="direct-wrap">
+      <div>
+        <button id="directBackBtn" type="button" class="btn btn-secondary btn-compact">← Alle Fotos</button>
       </div>
-
-      <div class="tabs">
-        <button type="button" class="tab-btn active" data-tab="upload">Upload &amp; Ordner</button>
-        <button type="button" class="tab-btn" data-tab="options">Speicherdauer &amp; Links</button>
-        <button type="button" class="tab-btn" data-tab="kiosk">Beamer-Kiosk</button>
-      </div>
-
-      <!-- Tab 1: Upload & Ordner -->
-      <div id="tabUpload">
-        <!-- Automatischer Ordner-Upload inkl. Archiv-Modus -->
-        <section class="box">
-          <h2>Automatischer Ordner-Upload (Mac &amp; Windows)</h2>
-          <p>Überwacht in Chrome oder Edge automatisch euren OBS-/Kamera-Ordner und lädt neue Bilder in voller Qualität (bis 24 MB) hoch.</p>
-
-          <div class="field" style="margin-top:14px; margin-bottom:0;">
-            <label for="folderModeSelect">Verhalten nach erfolgreichem Upload</label>
-            <select id="folderModeSelect" class="select-input">
-              <option value="archive">In Unterordner „Archiv“ verschieben (Eingang → Archiv)</option>
-              <option value="delete">Lokale Datei nach Upload komplett löschen</option>
-              <option value="keep">Lokale Datei unverändert im Ordner behalten</option>
-            </select>
-          </div>
-
-          <div id="folderModeHint" class="info-box"></div>
-
-          <div class="row-actions">
-            <button type="button" class="btn btn-dark" id="pickFolderBtn">Hauptordner auswählen</button>
-            <button type="button" class="btn btn-outline hidden" id="pauseFolderBtn">Pausieren</button>
-            <button type="button" class="btn btn-danger hidden" id="stopFolderBtn">Trennen</button>
-            <span class="submeta mono" id="folderStatus"></span>
-          </div>
-          <div id="folderWarning" class="warn-box hidden"></div>
-          <div id="folderLog" class="list hidden"></div>
-        </section>
-
-        <!-- Manueller Upload -->
-        <section id="dropzone" class="dropzone">
-          <h2 style="font-size:16px; margin-bottom:6px;">Einzelne Fotos manuell hochladen</h2>
-          <p class="submeta" id="manualUploadHint">JPEG, PNG oder WebP · bis 24 MB · volle Originalauflösung · 5 Min. sichtbar</p>
-          <div class="row-actions" style="justify-content:center;">
-            <button type="button" class="btn btn-primary" id="selectFilesBtn">Dateien auswählen</button>
-            <button type="button" class="btn btn-outline" id="openCameraBtn">Kamera öffnen</button>
-          </div>
-          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple class="hidden" />
-          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
-          <div id="uploadLog" class="list hidden" style="text-align:left;"></div>
-        </section>
-
-        <!-- Aktive Fotos verwalten -->
-        <section>
-          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-            <h2 style="font-size:16px;">Aktive Aufnahmen verwalten</h2>
-            <span class="submeta mono" id="manageStats">0 / 30 belegt</span>
-          </div>
-          <div id="manageList" class="list"></div>
-        </section>
-      </div>
-
-      <!-- Tab 2: Speicherdauer & Persönliche Links -->
-      <div id="tabOptions" class="hidden">
-        <section class="box">
-          <h2>Speicherdauer pro Foto</h2>
-          <p>Stelle hier jederzeit ein, wie viele Minuten neu hochgeladene Fotos gespeichert bleiben, bevor sie automatisch aus Cloudflare KV, D1, Galerie und Beamer gelöscht werden (1 bis 60 Minuten).</p>
-
-          <div class="preset-row" id="ttlPresets">
-            <button type="button" class="preset-btn" data-min="1">1 Min</button>
-            <button type="button" class="preset-btn" data-min="3">3 Min</button>
-            <button type="button" class="preset-btn" data-min="5">5 Min</button>
-            <button type="button" class="preset-btn" data-min="10">10 Min</button>
-            <button type="button" class="preset-btn" data-min="15">15 Min</button>
-            <button type="button" class="preset-btn" data-min="30">30 Min</button>
-            <button type="button" class="preset-btn" data-min="60">60 Min</button>
-          </div>
-
-          <div class="row-actions" style="margin-top:16px;">
-            <input type="number" id="ttlCustomInput" min="1" max="60" value="5" style="width:110px; height:40px; padding:0 12px; border-radius:9px; border:1px solid #D4D4D8;" />
-            <span class="submeta">Minuten (gilt für alle ab jetzt neu hochgeladenen Fotos)</span>
-          </div>
-        </section>
-
-        <section class="box">
-          <h2>Persönliche Foto-Links (global an / aus)</h2>
-          <p>Aktiviert persönliche Direkt-Links (<span class="mono">/?foto=...</span>) in der Galerie, in der Vollbild-Ansicht sowie im <strong>Kiosk-Modus 2 (Letztes Foto + QR-Code)</strong>. Wenn deaktiviert, werden alle persönlichen Links, Kopier-Buttons und QR-Einblendungen komplett gesperrt.</p>
-
-          <label class="checkbox-row">
-            <input type="checkbox" id="directLinksToggle" />
-            <span>Persönliche Links zu einzelnen Bildern aktivieren</span>
-          </label>
-        </section>
-
-        <button type="button" class="btn btn-primary" id="saveOptionsBtn">Einstellungen speichern</button>
-      </div>
-
-      <!-- Tab 3: Beide Kiosk-Modi -->
-      <div id="tabKiosk" class="hidden">
-        <div class="kiosk-grid-cards">
-          <!-- Kiosk 1: Puristisch (2 oder 3 Fotos) -->
-          <section class="box">
-            <div>
-              <h2>Kiosk 1: Galerie-Beamer (2–3 Fotos)</h2>
-              <p style="margin-top:6px;">Zeigt im Vollbild auf tiefschwarzem Hintergrund ausschließlich die letzten 2 oder 3 aktiven Fotos sauber geordnet — komplett puristisch ohne Texte, Links oder QR-Code.</p>
-              <p class="submeta" style="margin-top:12px;">Tasten: <span class="mono">2</span> / <span class="mono">3</span> Fotos · <span class="mono">F</span> Vollbild · <span class="mono">ESC</span> Beenden</p>
-            </div>
-            <div style="margin-top:20px;">
-              <button type="button" class="btn btn-dark" style="width:100%;" id="startKioskGalleryBtn">Kiosk 1 starten (2–3 Fotos)</button>
-            </div>
-          </section>
-
-          <!-- Kiosk 2: Letztes Foto + Persönlicher Link & QR -->
-          <section class="box">
-            <div>
-              <h2>Kiosk 2: Letztes Foto + Persönlicher Link</h2>
-              <p style="margin-top:6px;">Zeigt ausschließlich das allerneueste Foto groß auf dem Bildschirm zusammen mit einem persönlichen QR-Code und Direkt-Link zu genau diesem Bild.</p>
-              <div id="kioskSingleDisabledNote" class="warn-box hidden">
-                Persönliche Foto-Links sind aktuell im Tab „Speicherdauer &amp; Links“ deaktiviert. Aktiviere sie dort zuerst, um Kiosk 2 mit persönlichem Link &amp; QR zu nutzen.
-              </div>
-            </div>
-            <div style="margin-top:20px;">
-              <button type="button" class="btn btn-primary" style="width:100%;" id="startKioskSingleBtn">Kiosk 2 starten (Letztes Foto + Link)</button>
-            </div>
-          </section>
-        </div>
-      </div>
+      <div id="directContent"></div>
     </div>
   </main>
 
   <!-- View 3: Datenschutz -->
-  <main id="viewPrivacy" class="hidden">
-    <div class="narrow">
-      <div class="page-head" style="border-bottom:1px solid var(--border); margin-bottom:24px;">
-        <h1>Datenschutz beim Tag der offenen Tür</h1>
+  <main id="privacyView" class="container container-narrow hidden">
+    <div class="stack">
+      <div>
+        <button id="privacyBackBtn" type="button" class="btn btn-secondary btn-compact">← Zurück zur Galerie</button>
       </div>
-      <div class="box">
-        <h2 id="privacyTtlTitle">01. Automatische Löschung nach 5 Minuten</h2>
-        <p id="privacyTtlDesc">Jede Aufnahme bleibt aktuell genau 5 Minuten sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.</p>
+      <div class="card prose">
+        <h1 style="font-size: 1.4rem; color: var(--text);">Datenschutzhinweise</h1>
+        <p>Diese Live-Galerie dient ausschließlich dazu, Besuchern am Tag der offenen Tür aktuelle Fotos direkt zum Herunterladen in Originalqualität bereitzustellen.</p>
+        <h2>Automatische Löschung</h2>
+        <p id="privacyTtlText">Jedes hochgeladene Foto wird automatisch nach Ablauf der eingestellten Speicherdauer vollständig vom Server gelöscht.</p>
+        <h2>Begrenzte Anzahl aktiver Fotos</h2>
+        <p>Es werden zu jedem Zeitpunkt maximal 30 Fotos gleichzeitig bereitgehalten. Wird ein neues Foto hochgeladen und das Limit überschritten, wird das älteste Foto sofort und endgültig gelöscht.</p>
+        <h2>Kein Tracking, keine Weitergabe</h2>
+        <p>Es werden keine Werbe-Cookies, keine Tracking-Skripte und keine Nutzerkonten für Besucher verwendet. QR-Codes im Kiosk-Modus werden vollständig lokal im Browser erzeugt.</p>
       </div>
-      <div class="box">
-        <h2>02. Begrenzung auf maximal 30 aktive Fotos</h2>
-        <p>Es werden nie mehr als 30 Fotos gleichzeitig vorgehalten. Ab dem 31. Foto werden die ältesten Aufnahmen automatisch gelöscht.</p>
-      </div>
-      <div class="box">
-        <h2>03. Verlustfrei für Apple Fotos &amp; Android ohne Tracking</h2>
-        <p>Es gibt kein Benutzerkonto, kein Tracking und kein Browser-Caching. Über „In Fotos sichern“ öffnet sich auf dem iPhone direkt das Teilen-Menü mit „Bild sichern“ für Apple Fotos; auf Android landet das Original direkt in der Galerie.</p>
-      </div>
-      <button type="button" class="btn btn-dark" id="privacyBackBtn">Zurück zur Galerie</button>
     </div>
   </main>
 
-  <!-- Footer ganz unten -->
-  <footer id="appFooter">
+  <!-- View 4: PIN-geschützte Einstellungen -->
+  <main id="settingsView" class="container container-narrow hidden">
+    <div class="admin-head">
+      <button id="settingsBackBtn" type="button" class="btn btn-secondary btn-compact">← Zur Galerie</button>
+      <button id="logoutBtn" type="button" class="btn btn-secondary btn-compact hidden">Abmelden</button>
+    </div>
+
+    <!-- PIN Login / Setup -->
+    <section id="pinGate" class="card stack">
+      <div>
+        <h1 id="pinGateTitle" class="section-title" style="font-size: 1.25rem;">Team-Anmeldung</h1>
+        <p id="pinGateSub" class="section-sub" style="margin-bottom: 0;">Bitte Team-PIN eingeben, um Fotos hochzuladen oder Einstellungen zu ändern.</p>
+      </div>
+      <form id="pinForm" class="stack" autocomplete="off">
+        <input id="pinInput" type="password" inputmode="numeric" class="input" placeholder="Team-PIN eingeben" required />
+        <div id="pinError" class="notice notice-err hidden"></div>
+        <button id="pinSubmitBtn" type="submit" class="btn btn-primary btn-full">Anmelden</button>
+      </form>
+    </section>
+
+    <!-- Admin Panel (nach Login) -->
+    <section id="adminPanel" class="hidden">
+      <div class="tabs" role="tablist" aria-label="Einstellungsbereiche">
+        <button type="button" class="tab-btn active" data-tab="upload">Upload</button>
+        <button type="button" class="tab-btn" data-tab="config">Zeit &amp; Links</button>
+        <button type="button" class="tab-btn" data-tab="kiosk">Beamer &amp; OBS</button>
+      </div>
+
+      <!-- Tab 1: Upload & Ordner -->
+      <div id="tab-upload" class="stack">
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Manueller Foto-Upload</h2>
+            <p class="section-sub">Verlustfrei im Original (JPEG, PNG, WebP bis 24 MB pro Bild).</p>
+          </div>
+          <div id="dropzone" class="dropzone">
+            <p style="font-weight: 600; margin-bottom: 6px;">Fotos hier ablegen oder auswählen</p>
+            <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">Originalqualität bleibt vollständig erhalten.</p>
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" />
+            <button id="pickFilesBtn" type="button" class="btn btn-primary">Fotos auswählen</button>
+          </div>
+          <div id="uploadStatus" class="notice hidden"></div>
+        </div>
+
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Automatischer Ordner-Upload (Mac &amp; Windows)</h2>
+            <p class="section-sub">Überwacht einen lokalen Kamera- oder OBS-Ordner in Chrome/Edge und lädt neue Fotos automatisch hoch.</p>
+          </div>
+
+          <div id="watcherUnsupported" class="notice notice-warn hidden">
+            Die automatische Ordner-Überwachung funktioniert auf Mac &amp; Windows in Chrome oder Edge. Auf dem Handy kannst du oben direkt Fotos hochladen.
+          </div>
+
+          <div id="watcherControls" class="stack">
+            <div class="mode-grid" id="watcherModeGrid">
+              <label class="mode-option selected" data-mode="archive">
+                <input type="radio" name="watchMode" value="archive" checked />
+                <div class="mode-text">
+                  <div class="mode-title">Archiv-Modus (Empfohlen)</div>
+                  <div class="mode-desc">Überwacht den Unterordner „Eingang“, lädt jedes neue Foto hoch, verschiebt es sicher in „Archiv“ und leert „Eingang“.</div>
+                </div>
+              </label>
+              <label class="mode-option" data-mode="delete">
+                <input type="radio" name="watchMode" value="delete" />
+                <div class="mode-text">
+                  <div class="mode-title">Direkt-Lösch-Modus</div>
+                  <div class="mode-desc">Überwacht den gewählten Ordner direkt und löscht die lokale Datei nach erfolgreichem Upload.</div>
+                </div>
+              </label>
+              <label class="mode-option" data-mode="keep">
+                <input type="radio" name="watchMode" value="keep" />
+                <div class="mode-text">
+                  <div class="mode-title">Behalten-Modus</div>
+                  <div class="mode-desc">Lädt neue Fotos aus dem gewählten Ordner hoch und lässt alle lokalen Dateien unverändert liegen.</div>
+                </div>
+              </label>
+            </div>
+
+            <div class="inline-row">
+              <button id="startWatchBtn" type="button" class="btn btn-dark" style="flex: 1 1 200px;">Ordner wählen &amp; starten</button>
+              <button id="stopWatchBtn" type="button" class="btn btn-danger hidden" style="flex: 1 1 140px;">Stoppen</button>
+            </div>
+
+            <div id="watcherStateBox" class="notice hidden"></div>
+            <div id="watcherLog" class="log-list hidden"></div>
+          </div>
+        </div>
+
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Aktive Fotos verwalten</h2>
+            <p id="adminPhotoCount" class="section-sub" style="margin-bottom: 0;">0 Fotos aktiv</p>
+          </div>
+          <div id="adminPhotoList" class="admin-list"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Speicherdauer & Links -->
+      <div id="tab-config" class="stack hidden">
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Speicherdauer pro Foto</h2>
+            <p class="section-sub">Legt fest, wie lange neu hochgeladene Fotos online bleiben (1 bis 60 Minuten).</p>
+          </div>
+
+          <div class="preset-grid" id="ttlPresets">
+            <button type="button" class="preset-btn" data-min="2">2 Min.</button>
+            <button type="button" class="preset-btn" data-min="5">5 Min.</button>
+            <button type="button" class="preset-btn" data-min="10">10 Min.</button>
+            <button type="button" class="preset-btn" data-min="15">15 Min.</button>
+            <button type="button" class="preset-btn" data-min="30">30 Min.</button>
+            <button type="button" class="preset-btn" data-min="60">60 Min.</button>
+          </div>
+
+          <div class="inline-row">
+            <input id="ttlCustomInput" type="number" min="1" max="60" step="1" class="input" style="flex: 1 1 140px;" aria-label="Speicherdauer in Minuten" />
+            <button id="saveTtlBtn" type="button" class="btn btn-primary" style="flex: 1 1 140px;">Zeit speichern</button>
+          </div>
+          <div id="ttlSaveMsg" class="notice hidden"></div>
+        </div>
+
+        <div class="card stack">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h2 class="section-title">Persönliche Foto-Links &amp; QR-Codes</h2>
+              <p class="section-sub" style="margin-bottom: 0;">Wenn deaktiviert, werden alle „Link kopieren“-Buttons, Direktlinks (/?foto=…) und QR-Codes im OBS-Kiosk sofort ausgeblendet und gesperrt.</p>
+            </div>
+            <label class="switch" aria-label="Persönliche Foto-Links aktivieren">
+              <input id="directLinksToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="linksSaveMsg" class="notice hidden"></div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Beamer & OBS -->
+      <div id="tab-kiosk" class="stack hidden">
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Kiosk 2: OBS Szene 2 (Neuestes Foto + QR)</h2>
+            <p class="section-sub">Zeigt immer das allerneueste Foto mit persönlichem QR-Code. Ideal als OBS Browser-Quelle (1920×1080, „Quelle abschalten, wenn nicht sichtbar“ deaktivieren).</p>
+          </div>
+
+          <div id="kioskLinksOffWarn" class="notice notice-warn hidden">
+            Hinweis: Persönliche Foto-Links sind aktuell unter „Zeit &amp; Links“ deaktiviert. Der QR-Code wird daher ausgeblendet.
+          </div>
+
+          <button id="launchKioskSingleBtn" type="button" class="btn btn-primary btn-full">Neuestes Foto + QR hier starten</button>
+
+          <div class="url-box">
+            <div id="obsSingleUrlText" class="url-code"></div>
+            <button id="copyObsSingleBtn" type="button" class="btn btn-secondary btn-compact">OBS-Link kopieren</button>
+          </div>
+        </div>
+
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Kiosk 1: Aula-Beamer (Puristisch)</h2>
+            <p class="section-sub">Dunkler Vollbildmodus ohne Text, Buttons oder QR-Codes – zeigt immer die letzten 2 oder 3 Fotos.</p>
+          </div>
+
+          <div class="inline-row">
+            <button id="launchKiosk3Btn" type="button" class="btn btn-dark" style="flex: 1 1 160px;">Mit 3 Fotos starten</button>
+            <button id="launchKiosk2Btn" type="button" class="btn btn-secondary" style="flex: 1 1 160px;">Mit 2 Fotos starten</button>
+          </div>
+
+          <div class="url-box">
+            <div id="beamer3UrlText" class="url-code"></div>
+            <button id="copyBeamer3Btn" type="button" class="btn btn-secondary btn-compact">3-Fotos-Link kopieren</button>
+          </div>
+
+          <div class="url-box">
+            <div id="beamer2UrlText" class="url-code"></div>
+            <button id="copyBeamer2Btn" type="button" class="btn btn-secondary btn-compact">2-Fotos-Link kopieren</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer id="appFooter" class="footer">
     <div class="footer-inner">
-      <span id="footerTtlText">Automatische Löschung nach 5 Minuten</span>
-      <button type="button" class="footer-link" id="privacyLink">Datenschutz</button>
+      <span id="footerTtlNote">Fotos werden automatisch gelöscht.</span>
+      <button id="openPrivacyBtn" type="button" class="footer-link">Datenschutz</button>
     </div>
   </footer>
 
-  <!-- Vollbild-Lightbox -->
-  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true">
-    <div class="lb-top">
-      <span class="submeta mono" style="color:#D4D4D8;" id="lbMeta"></span>
-      <button type="button" class="btn" style="background:rgba(255,255,255,0.12); color:#FFF;" id="lbCloseBtn">✕</button>
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Foto-Vollbildansicht">
+    <div class="lightbox-top">
+      <div id="lightboxMeta" class="lightbox-meta tabular"></div>
+      <button id="lightboxCloseBtn" type="button" class="lightbox-close" aria-label="Schließen">✕</button>
     </div>
-    <div class="lb-stage">
-      <button type="button" class="lb-nav lb-prev" id="lbPrevBtn">‹</button>
-      <img id="lbImg" alt="Foto in voller Auflösung" />
-      <button type="button" class="lb-nav lb-next" id="lbNextBtn">›</button>
+    <div id="lightboxStage" class="lightbox-stage">
+      <img id="lightboxImg" alt="Aktuelles Foto in voller Auflösung" />
     </div>
-    <div class="lb-bottom">
-      <span class="submeta" style="color:#A1A1AA;" id="lbTip">Originaldatei in voller Qualität.</span>
-      <div style="display:flex; flex-wrap:wrap; gap:10px;">
-        <button type="button" class="btn hidden" style="background:rgba(255,255,255,0.1); color:#FFF;" id="lbCopyLinkBtn">Link kopieren</button>
-        <button type="button" class="btn btn-primary" id="lbSaveBtn">In Fotos sichern</button>
-        <button type="button" class="btn" style="background:rgba(255,255,255,0.1); color:#FFF;" id="lbDownloadBtn">Original laden</button>
-      </div>
+    <div class="lightbox-bottom">
+      <button id="lightboxSaveBtn" type="button" class="btn btn-primary">In Fotos sichern</button>
+      <button id="lightboxDownloadBtn" type="button" class="btn btn-ghost-dark">Original laden</button>
+      <button id="lightboxCopyBtn" type="button" class="btn btn-ghost-dark hidden">Link kopieren</button>
     </div>
   </div>
 
-  <!-- Beamer-Kiosk (beide Modi) -->
-  <div id="kioskView" class="kiosk hidden">
-    <div id="kioskEmpty" class="kiosk-empty hidden">
-      <h2 class="serif">Tag der offenen Tür</h2>
-      <p>Neue Aufnahmen erscheinen hier automatisch</p>
-    </div>
-    <div id="kioskStage" class="kiosk-stage"></div>
-    <div id="kioskBar" class="kiosk-bar">
-      <button type="button" id="kiosk2Btn">2 Fotos</button>
-      <button type="button" id="kiosk3Btn" class="active">3 Fotos</button>
-      <button type="button" id="kioskSingleBtn">Letztes + Link</button>
-      <button type="button" id="kioskFsBtn">Vollbild</button>
-      <button type="button" id="kioskExitBtn">Beenden</button>
+  <!-- Kiosk Vollbild-Overlay (Beamer & OBS) -->
+  <div id="kioskView" class="kiosk-screen hidden">
+    <div id="kioskStage" style="flex: 1; min-height: 0; display: flex; flex-direction: column;"></div>
+    <div id="kioskBar" class="kiosk-bar hide">
+      <button type="button" id="kioskBtn2">2 Fotos</button>
+      <button type="button" id="kioskBtn3">3 Fotos</button>
+      <button type="button" id="kioskBtnSingle">Neuestes + QR</button>
+      <button type="button" id="kioskBtnFs">Vollbild</button>
+      <button type="button" id="kioskBtnExit">Beenden</button>
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <!-- Toast -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script>
     (() => {
-      const MAX_FILE_BYTES = 24 * 1024 * 1024; // 24 MB
-      const initialDirectPhotoId = new URLSearchParams(window.location.search).get('foto');
+      'use strict';
+
+      const MAX_FILE_BYTES = 24 * 1024 * 1024;
+      const POLL_GALLERY_MS = 3000;
+      const POLL_KIOSK_MS = 1500;
 
       const state = {
-        view: 'gallery',
-        photos: [],
-        maxPhotos: 30,
-        ttlMinutes: 5,
-        ttlMs: 300000,
-        directLinksEnabled: false,
-        clockOffset: 0,
-        teamToken: null,
+        view: 'gallery', // 'gallery' | 'direct' | 'privacy' | 'settings' | 'kiosk'
+        activeTab: 'upload',
+        token: null, // Nur im Arbeitsspeicher, niemals localStorage
         pinConfigured: true,
-        lightboxId: null,
-        pendingDirectPhotoId: initialDirectPhotoId,
-        kioskMode: 'gallery', // 'gallery' (2-3 Fotos puristisch) | 'single' (Letztes Foto + Link & QR)
+        photos: [],
+        ttlMinutes: 5,
+        directLinksEnabled: true,
+        maxPhotos: 30,
+        clockOffset: 0,
+        directPhotoId: null,
+        lightboxPhotoId: null,
+        kioskMode: 'gallery', // 'gallery' | 'single'
         kioskCount: 3,
-        lastGalleryKey: '',
-        lastKioskKey: '',
-        lastManageKey: '',
-        rootDirHandle: null,
-        watchDirHandle: null,
-        archiveDirHandle: null,
-        activeFolderMode: 'archive',
-        watching: false,
-        uploadedViaWatcher: 0,
+        kioskDirectBoot: false,
+        lastGallerySig: '',
+        lastDirectSig: '',
+        lastKioskSig: '',
+        lastAdminSig: '',
+        pollTimer: null,
+        kioskHideTimer: null,
+        toastTimer: null,
+        // Folder watcher
+        watcherActive: false,
+        watcherTimer: null,
+        watcherBusy: false,
+        watcherRootHandle: null,
+        watcherInHandle: null,
+        watcherArchiveHandle: null,
+        watcherMode: 'archive',
+        watcherSeen: new Map(),
+        watcherProcessed: new Set(),
+        watcherStats: { uploaded: 0, archived: 0, errors: 0 },
       };
 
-      const stabilityMap = new Map();
-      const inFlight = new Set();
-      const keptUploaded = new Set();
-      let kioskIdleTimer = null;
-      let toastTimer = null;
-      let watcherInterval = null;
-      let optionsLoadedOnce = false;
+      const el = (id) => document.getElementById(id);
 
-      const $ = (id) => document.getElementById(id);
-      const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isMobile = () => isIOS() || /Android/i.test(navigator.userAgent);
-      const serverNow = () => Date.now() + state.clockOffset;
+      // ---------- Helpers ----------
+      function nowServer() {
+        return Date.now() + state.clockOffset;
+      }
 
-      function fmtCountdown(ms) {
-        const s = Math.max(0, Math.ceil(ms / 1000));
-        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+      function formatCountdown(ms) {
+        const totalSec = Math.max(0, Math.ceil(ms / 1000));
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return m + ':' + String(s).padStart(2, '0');
       }
-      function fmtTime(ts) {
-        return new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(new Date(ts));
+
+      function formatBytes(bytes) {
+        if (!bytes || bytes < 1024) return (bytes || 0) + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
       }
-      function fmtSize(b) {
-        return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1).replace('.', ',') + ' MB';
+
+      function photoUrl(id, forceDownload = false) {
+        return '/api/photos/' + encodeURIComponent(id) + '/file' + (forceDownload ? '?download=1' : '');
       }
-      function photoUrl(id, dl = false) {
-        return '/api/photos/' + encodeURIComponent(id) + '/file' + (dl ? '?download=1' : '');
-      }
-      function directPhotoShareUrl(id) {
+
+      function personalPhotoUrl(id) {
         return window.location.origin + '/?foto=' + encodeURIComponent(id);
       }
 
-      // Scharfer Vektor-QR-Code lokal im Browser (ohne innerHTML, ohne externe QR-API)
+      function normalizePhoto(raw) {
+        const createdAt = Number(raw.createdAt ?? raw.created_at ?? Date.now());
+        const expiresAt = Number(raw.expiresAt ?? raw.expires_at ?? (createdAt + state.ttlMinutes * 60000));
+        return {
+          id: String(raw.id),
+          fileName: String(raw.fileName ?? raw.file_name ?? 'foto.jpg'),
+          mimeType: String(raw.mimeType ?? raw.mime_type ?? 'image/jpeg'),
+          sizeBytes: Number(raw.sizeBytes ?? raw.size_bytes ?? 0),
+          width: raw.width ?? null,
+          height: raw.height ?? null,
+          createdAt,
+          expiresAt,
+        };
+      }
+
+      function canShareFiles() {
+        try {
+          return Boolean(navigator.share && navigator.canShare);
+        } catch {
+          return false;
+        }
+      }
+
+      function showToast(msg) {
+        const t = el('toast');
+        t.textContent = msg;
+        t.classList.remove('hidden');
+        clearTimeout(state.toastTimer);
+        state.toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+      }
+
+      async function copyText(text, okMsg = 'Link kopiert') {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          showToast(okMsg);
+        } catch {
+          showToast('Kopieren fehlgeschlagen – bitte manuell markieren.');
+        }
+      }
+
+      function triggerDirectDownload(photo) {
+        const a = document.createElement('a');
+        a.href = photoUrl(photo.id, true);
+        a.download = photo.fileName || 'foto.jpg';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+
+      async function savePhotoLossless(photo, btnEl) {
+        const origText = btnEl ? btnEl.textContent : '';
+        if (btnEl) {
+          btnEl.disabled = true;
+          btnEl.textContent = 'Lädt…';
+        }
+        try {
+          if (canShareFiles()) {
+            const res = await fetch(photoUrl(photo.id, false), { cache: 'no-store' });
+            if (!res.ok) throw new Error('Foto nicht mehr verfügbar');
+            const blob = await res.blob();
+            const file = new File([blob], photo.fileName || 'foto.jpg', {
+              type: blob.type || photo.mimeType || 'image/jpeg',
+            });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: 'Tag der offenen Tür',
+              });
+              showToast('Foto bereit zum Sichern');
+              return;
+            }
+          }
+          triggerDirectDownload(photo);
+          showToast('Original wird heruntergeladen');
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+          triggerDirectDownload(photo);
+        } finally {
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.textContent = origText;
+          }
+        }
+      }
+
+      // Sichere lokale SVG-QR-Code-Erzeugung (ohne innerHTML)
       function createQrSvgElement(text) {
-        if (typeof window.qrcode !== 'function') return null;
+        if (typeof window.qrcode !== 'function') {
+          const fallback = document.createElement('div');
+          fallback.style.fontSize = '0.8rem';
+          fallback.style.color = '#52525b';
+          fallback.textContent = 'QR wird geladen…';
+          return fallback;
+        }
         const qr = window.qrcode(0, 'M');
         qr.addData(text);
         qr.make();
         const count = qr.getModuleCount();
-        const ns = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('viewBox', `0 0 ${count} ${count}`);
-        svg.setAttribute('shape-rendering', 'crispEdges');
-        svg.setAttribute('aria-label', 'QR-Code für persönliches Foto');
+        const pad = 2;
+        const size = count + pad * 2;
+        const svgNS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', 'QR-Code zum direkten Foto-Link');
 
-        const bg = document.createElementNS(ns, 'rect');
-        bg.setAttribute('width', String(count));
-        bg.setAttribute('height', String(count));
-        bg.setAttribute('fill', '#FFFFFF');
+        const bg = document.createElementNS(svgNS, 'rect');
+        bg.setAttribute('width', String(size));
+        bg.setAttribute('height', String(size));
+        bg.setAttribute('fill', '#ffffff');
         svg.appendChild(bg);
 
         let d = '';
-        for (let r = 0; r < count; r++) {
-          for (let c = 0; c < count; c++) {
-            if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+        for (let r = 0; r < count; r += 1) {
+          for (let c = 0; c < count; c += 1) {
+            if (qr.isDark(r, c)) {
+              d += `M${c + pad},${r + pad}h1v1h-1z`;
+            }
           }
         }
-        const path = document.createElementNS(ns, 'path');
+        const path = document.createElementNS(svgNS, 'path');
         path.setAttribute('d', d);
         path.setAttribute('fill', '#111111');
         svg.appendChild(path);
         return svg;
       }
 
-      function showToast(msg, isErr = false) {
-        const el = $('toast');
-        el.textContent = msg;
-        el.className = 'toast' + (isErr ? ' err' : '');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.add('hidden'), 3600);
-      }
-
-      async function copyDirectLink(id) {
-        if (!state.directLinksEnabled) {
-          showToast('Persönliche Foto-Links sind aktuell deaktiviert.', true);
-          return;
+      // ---------- API ----------
+      async function apiFetch(path, options = {}) {
+        const headers = new Headers(options.headers || {});
+        if (state.token) {
+          headers.set('Authorization', 'Bearer ' + state.token);
         }
-        const link = directPhotoShareUrl(id);
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(link);
-            showToast('Persönlicher Foto-Link kopiert.');
-            return;
-          }
-        } catch {}
-        const tmp = document.createElement('input');
-        tmp.value = link;
-        document.body.appendChild(tmp);
-        tmp.select();
-        document.execCommand('copy');
-        tmp.remove();
-        showToast('Persönlicher Foto-Link kopiert.');
-      }
-
-      function syncTtlLabels() {
-        const m = state.ttlMinutes;
-        const unit = m === 1 ? 'Minute' : 'Minuten';
-        $('emptyDesc').textContent = `Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils ${m} ${unit} in voller Qualität zum Herunterladen verfügbar.`;
-        $('manualUploadHint').textContent = `JPEG, PNG oder WebP · bis 24 MB · volle Originalauflösung · ${m} Min. sichtbar`;
-        $('footerTtlText').textContent = `Automatische Löschung nach ${m} ${unit}`;
-        $('privacyTtlTitle').textContent = `01. Automatische Löschung nach ${m} ${unit}`;
-        $('privacyTtlDesc').textContent = `Jede Aufnahme bleibt aktuell genau ${m} ${unit} sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.`;
-      }
-
-      function syncOptionsAndKioskControls() {
-        $('ttlCustomInput').value = String(state.ttlMinutes);
-        $('directLinksToggle').checked = state.directLinksEnabled;
-        document.querySelectorAll('#ttlPresets .preset-btn').forEach((btn) => {
-          btn.classList.toggle('active', Number(btn.dataset.min) === state.ttlMinutes);
-        });
-
-        // Kiosk 2 im Admin-Terminal & in der Kiosk-Leiste sperren, wenn persönliche Links deaktiviert sind
-        $('kioskSingleDisabledNote').classList.toggle('hidden', state.directLinksEnabled);
-        $('startKioskSingleBtn').disabled = !state.directLinksEnabled;
-        $('kioskSingleBtn').classList.toggle('hidden', !state.directLinksEnabled);
-
-        if (!state.directLinksEnabled && state.kioskMode === 'single') {
-          state.kioskMode = 'gallery';
-          updateKioskBarActiveState();
+        const res = await fetch(path, { ...options, headers, cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401 && state.token) {
+          state.token = null;
+          updateAuthUI();
         }
-      }
-
-      function updateKioskBarActiveState() {
-        $('kiosk2Btn').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 2);
-        $('kiosk3Btn').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 3);
-        $('kioskSingleBtn').classList.toggle('active', state.kioskMode === 'single');
-      }
-
-      function setView(next) {
-        if (next === 'kiosk' && !state.teamToken) next = 'settings';
-        state.view = next;
-        const isKiosk = next === 'kiosk';
-        $('appHeader').classList.toggle('hidden', isKiosk);
-        $('appFooter').classList.toggle('hidden', isKiosk);
-        $('viewGallery').classList.toggle('hidden', next !== 'gallery');
-        $('viewSettings').classList.toggle('hidden', next !== 'settings');
-        $('viewPrivacy').classList.toggle('hidden', next !== 'privacy');
-        $('kioskView').classList.toggle('hidden', !isKiosk);
-        $('backGalleryBtn').classList.toggle('hidden', next === 'gallery');
-        $('settingsBtn').classList.toggle('hidden', next === 'settings');
-        $('settingsBtn').className = state.teamToken ? 'btn btn-dark' : 'btn btn-outline';
-        if (isKiosk) {
-          updateKioskBarActiveState();
-          revealKioskBar();
-          renderKiosk(true);
-        } else {
-          window.scrollTo(0, 0);
-        }
-        if (next === 'settings') {
-          renderSettingsAuth();
-          syncOptionsAndKioskControls();
-        }
-      }
-
-      // Lossless iOS / Android Save
-      async function savePhoto(photo, forceDirect = false) {
-        try {
-          const res = await fetch(photoUrl(photo.id, forceDirect), { cache: 'no-store' });
-          if (!res.ok) throw new Error('Foto ist bereits abgelaufen und wurde gelöscht.');
-          const blob = await res.blob();
-          const file = new File([blob], photo.fileName, { type: photo.mimeType || blob.type || 'image/jpeg' });
-          if (!forceDirect && isMobile() && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({ files: [file], title: 'Tag der offenen Tür' });
-              showToast('Im Teilen-Menü „Bild sichern“ für Apple Fotos wählen.');
-              return;
-            } catch (e) {
-              if (e && e.name === 'AbortError') return;
-            }
-          }
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = photo.fileName; a.rel = 'noopener';
-          document.body.appendChild(a); a.click(); a.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 15000);
-          showToast('Originalfoto in voller Qualität gespeichert.');
-        } catch (err) {
-          showToast(err.message || 'Download fehlgeschlagen.', true);
-        }
-      }
-
-      // API Sync
-      async function fetchAuthStatus() {
-        try {
-          const headers = state.teamToken ? { Authorization: 'Bearer ' + state.teamToken } : {};
-          const res = await fetch('/api/auth/status', { headers, cache: 'no-store' });
-          if (!res.ok) return;
-          const data = await res.json();
-          state.pinConfigured = Boolean(data.configured);
-          if (state.teamToken && !data.authenticated) state.teamToken = null;
-          renderSettingsAuth();
-        } catch {}
+        return { ok: res.ok, status: res.status, data };
       }
 
       async function fetchPhotos() {
         try {
-          const res = await fetch('/api/photos', { cache: 'no-store' });
-          if (!res.ok) return;
-          const data = await res.json();
-          if (typeof data.serverNow === 'number') state.clockOffset = data.serverNow - Date.now();
-          if (typeof data.ttlMinutes === 'number') state.ttlMinutes = data.ttlMinutes;
-          if (typeof data.ttlMs === 'number') state.ttlMs = data.ttlMs;
-          if (typeof data.directLinksEnabled === 'boolean') state.directLinksEnabled = data.directLinksEnabled;
-          if (typeof data.maxPhotos === 'number') state.maxPhotos = data.maxPhotos;
-          state.photos = (data.photos || []).sort((a, b) => b.createdAt - a.createdAt);
+          const { ok, data } = await apiFetch('/api/photos');
+          if (!ok) return;
+          if (typeof data.serverNow === 'number') {
+            state.clockOffset = data.serverNow - Date.now();
+          }
+          if (typeof data.ttlMinutes === 'number') {
+            state.ttlMinutes = data.ttlMinutes;
+          } else if (typeof data.ttlMs === 'number') {
+            state.ttlMinutes = Math.max(1, Math.round(data.ttlMs / 60000));
+          }
+          if (typeof data.directLinksEnabled === 'boolean') {
+            state.directLinksEnabled = data.directLinksEnabled;
+          } else if (typeof data.direct_links_enabled === 'boolean') {
+            state.directLinksEnabled = data.direct_links_enabled;
+          }
+          if (typeof data.maxPhotos === 'number') {
+            state.maxPhotos = data.maxPhotos;
+          }
 
-          syncTtlLabels();
-          if (!optionsLoadedOnce) {
-            optionsLoadedOnce = true;
-            syncOptionsAndKioskControls();
+          const rawList = Array.isArray(data.photos) ? data.photos : [];
+          const now = nowServer();
+          state.photos = rawList
+            .map(normalizePhoto)
+            .filter((p) => p.expiresAt > now)
+            .sort((a, b) => b.createdAt - a.createdAt);
+
+          syncFooterAndPrivacy();
+          syncSettingsControls();
+          renderActiveView();
+        } catch {
+          // Netzwerk kurz weg – beim nächsten Poll automatisch neu laden
+        }
+      }
+
+      async function checkAuthStatus() {
+        const { ok, data } = await apiFetch('/api/auth/status');
+        if (!ok) return;
+        state.pinConfigured = Boolean(data.configured ?? data.pinConfigured ?? true);
+        if (!data.authenticated && state.token) {
+          state.token = null;
+        }
+        updateAuthUI();
+      }
+
+      // ---------- Routing & Views ----------
+      function setView(viewName, opts = {}) {
+        state.view = viewName;
+
+        const isKiosk = viewName === 'kiosk';
+        document.body.classList.toggle('kiosk-active', isKiosk);
+        el('appHeader').classList.toggle('hidden', isKiosk);
+        el('appFooter').classList.toggle('hidden', isKiosk);
+
+        el('galleryView').classList.toggle('hidden', viewName !== 'gallery');
+        el('directView').classList.toggle('hidden', viewName !== 'direct');
+        el('privacyView').classList.toggle('hidden', viewName !== 'privacy');
+        el('settingsView').classList.toggle('hidden', viewName !== 'settings');
+        el('kioskView').classList.toggle('hidden', !isKiosk);
+
+        if (isKiosk) {
+          if (opts.kioskMode) state.kioskMode = opts.kioskMode;
+          if (opts.kioskCount) state.kioskCount = opts.kioskCount;
+          state.lastKioskSig = '';
+          updateKioskBarButtons();
+          if (opts.silentBar) {
+            el('kioskBar').classList.add('hide');
           } else {
-            // Kiosk 2 sofort anpassen, falls Admin persönliche Links abschaltet
-            $('kioskSingleDisabledNote').classList.toggle('hidden', state.directLinksEnabled);
-            $('startKioskSingleBtn').disabled = !state.directLinksEnabled;
-            $('kioskSingleBtn').classList.toggle('hidden', !state.directLinksEnabled);
-            if (!state.directLinksEnabled && state.kioskMode === 'single') {
-              state.kioskMode = 'gallery';
-              updateKioskBarActiveState();
-            }
+            revealKioskBar();
           }
-
-          renderAll();
-
-          // Persönlichen Direkt-Link (?foto=<id>) nur öffnen, wenn persönliche Links aktiviert sind!
-          if (state.pendingDirectPhotoId) {
-            const targetId = state.pendingDirectPhotoId;
-            state.pendingDirectPhotoId = null;
-            if (!state.directLinksEnabled) {
-              window.history.replaceState({}, '', window.location.pathname);
-              showToast('Persönliche Foto-Links sind aktuell deaktiviert.', true);
-            } else {
-              const found = activePhotos().find((p) => p.id === targetId);
-              if (found) {
-                openLightbox(found.id);
-              } else {
-                showToast('Dieses verlinkte Foto ist bereits abgelaufen und wurde gelöscht.', true);
-              }
-            }
+        } else {
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
           }
-        } catch {}
+        }
+
+        if (viewName === 'settings') {
+          checkAuthStatus();
+          updateKioskUrlDisplays();
+        }
+
+        restartPolling();
+        renderActiveView();
       }
 
-      function activePhotos() {
-        const now = serverNow();
-        return state.photos.filter((p) => p.expiresAt > now);
+      function restartPolling() {
+        clearInterval(state.pollTimer);
+        const interval = state.view === 'kiosk' ? POLL_KIOSK_MS : POLL_GALLERY_MS;
+        state.pollTimer = setInterval(fetchPhotos, interval);
       }
 
+      function syncFooterAndPrivacy() {
+        const min = state.ttlMinutes;
+        el('footerTtlNote').textContent = `Fotos werden nach ${min} Min. automatisch gelöscht.`;
+        el('privacyTtlText').textContent = `Jedes hochgeladene Foto wird aktuell nach ${min} Minuten automatisch und unwiderruflich vom Server gelöscht.`;
+      }
+
+      function syncSettingsControls() {
+        const input = el('ttlCustomInput');
+        if (document.activeElement !== input) {
+          input.value = String(state.ttlMinutes);
+        }
+        document.querySelectorAll('#ttlPresets .preset-btn').forEach((btn) => {
+          btn.classList.toggle('active', Number(btn.dataset.min) === state.ttlMinutes);
+        });
+        el('directLinksToggle').checked = state.directLinksEnabled;
+        el('kioskLinksOffWarn').classList.toggle('hidden', state.directLinksEnabled);
+      }
+
+      function updateKioskUrlDisplays() {
+        const origin = window.location.origin;
+        el('obsSingleUrlText').textContent = origin + '/?kiosk=single';
+        el('beamer3UrlText').textContent = origin + '/?kiosk=3';
+        el('beamer2UrlText').textContent = origin + '/?kiosk=2';
+      }
+
+      function renderActiveView() {
+        if (state.view === 'gallery') renderGallery();
+        else if (state.view === 'direct') renderDirectPhoto();
+        else if (state.view === 'settings') renderAdminPhotos();
+        else if (state.view === 'kiosk') renderKiosk();
+
+        if (state.lightboxPhotoId) {
+          updateLightboxCountdown();
+        }
+      }
+
+      // ---------- Gallery Rendering (Flackerfrei) ----------
       function renderGallery() {
-        const list = activePhotos();
-        $('galleryStats').textContent = `${list.length} / ${state.maxPhotos} aktiv · ${state.ttlMinutes} Min. verfügbar`;
-        $('galleryEmpty').classList.toggle('hidden', list.length > 0);
-        const key = list.map((p) => p.id).join(',') + '|' + Boolean(state.teamToken) + '|' + state.directLinksEnabled;
-        if (key === state.lastGalleryKey) { updateCountdowns(); return; }
-        state.lastGalleryKey = key;
+        const now = nowServer();
+        const active = state.photos.filter((p) => p.expiresAt > now);
+        const count = active.length;
+        const meta = el('galleryMeta');
+        meta.textContent = '';
+        const s1 = document.createElement('span');
+        s1.textContent = count === 1 ? '1 Foto aktiv' : `${count} Fotos aktiv`;
+        const sep = document.createElement('span');
+        sep.className = 'meta-sep';
+        sep.setAttribute('aria-hidden', 'true');
+        sep.textContent = '·';
+        const s2 = document.createElement('span');
+        s2.textContent = `Löschung nach ${state.ttlMinutes} Min.`;
+        meta.append(s1, sep, s2);
 
-        const grid = $('galleryGrid');
-        grid.textContent = '';
-        for (const photo of list) {
-          const card = document.createElement('article');
-          card.className = 'card';
+        const grid = el('galleryGrid');
+        const empty = el('galleryEmpty');
 
-          const wrap = document.createElement('div');
-          wrap.className = 'thumb-wrap';
-          wrap.addEventListener('click', () => openLightbox(photo.id));
+        if (count === 0) {
+          grid.textContent = '';
+          state.lastGallerySig = 'EMPTY';
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+
+        const sig = active.map((p) => p.id).join(',') + '|L:' + (state.directLinksEnabled ? '1' : '0');
+        if (sig !== state.lastGallerySig) {
+          state.lastGallerySig = sig;
+          grid.textContent = '';
+          const mobileShare = canShareFiles();
+
+          for (const photo of active) {
+            const card = document.createElement('article');
+            card.className = 'photo-card';
+            card.dataset.photoId = photo.id;
+
+            const thumbBtn = document.createElement('button');
+            thumbBtn.type = 'button';
+            thumbBtn.className = 'photo-thumb-btn';
+            thumbBtn.setAttribute('aria-label', 'Foto vergrößern');
+            thumbBtn.addEventListener('click', () => openLightbox(photo.id));
+
+            const img = document.createElement('img');
+            img.src = photoUrl(photo.id);
+            img.alt = 'Live-Foto vom Tag der offenen Tür';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            thumbBtn.appendChild(img);
+
+            const track = document.createElement('div');
+            track.className = 'progress-track';
+            const bar = document.createElement('div');
+            bar.className = 'progress-bar';
+            bar.dataset.role = 'bar';
+            track.appendChild(bar);
+
+            const body = document.createElement('div');
+            body.className = 'photo-body';
+
+            const info = document.createElement('div');
+            info.className = 'photo-meta tabular';
+
+            const cd = document.createElement('span');
+            cd.className = 'photo-countdown';
+            cd.dataset.role = 'countdown';
+
+            const size = document.createElement('span');
+            const dimText = photo.width && photo.height ? `${photo.width}×${photo.height} · ` : '';
+            size.textContent = dimText + formatBytes(photo.sizeBytes);
+
+            info.append(cd, size);
+
+            const actions = document.createElement('div');
+            actions.className = 'photo-actions';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'btn btn-primary btn-save';
+            saveBtn.textContent = mobileShare ? 'In Fotos sichern' : 'Original laden';
+            saveBtn.addEventListener('click', () => savePhotoLossless(photo, saveBtn));
+            actions.appendChild(saveBtn);
+
+            if (state.directLinksEnabled) {
+              const copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'btn btn-secondary btn-copy';
+              copyBtn.textContent = 'Link';
+              copyBtn.setAttribute('aria-label', 'Persönlichen Foto-Link kopieren');
+              copyBtn.addEventListener('click', () => copyText(personalPhotoUrl(photo.id), 'Foto-Link kopiert'));
+              actions.appendChild(copyBtn);
+            }
+
+            body.append(info, actions);
+            card.append(thumbBtn, track, body);
+            grid.appendChild(card);
+          }
+        }
+
+        updateGalleryCountdowns();
+      }
+
+      function updateGalleryCountdowns() {
+        const now = nowServer();
+        const map = new Map(state.photos.map((p) => [p.id, p]));
+        let expiredAny = false;
+
+        document.querySelectorAll('#galleryGrid .photo-card').forEach((card) => {
+          const p = map.get(card.dataset.photoId);
+          if (!p || p.expiresAt <= now) {
+            expiredAny = true;
+            return;
+          }
+          const rem = Math.max(0, p.expiresAt - now);
+          const total = Math.max(1000, p.expiresAt - p.createdAt);
+          const ratio = Math.max(0, Math.min(1, rem / total));
+
+          const cd = card.querySelector('[data-role="countdown"]');
+          const bar = card.querySelector('[data-role="bar"]');
+          if (cd) {
+            cd.textContent = 'Löscht in ' + formatCountdown(rem);
+            cd.classList.toggle('warn', rem <= 60000 && rem > 20000);
+            cd.classList.toggle('danger', rem <= 20000);
+          }
+          if (bar) {
+            bar.style.transform = `scaleX(${ratio.toFixed(4)})`;
+            bar.classList.toggle('warn', rem <= 60000 && rem > 20000);
+            bar.classList.toggle('danger', rem <= 20000);
+          }
+        });
+
+        if (expiredAny) {
+          state.photos = state.photos.filter((p) => p.expiresAt > now);
+          renderGallery();
+        }
+      }
+
+      // ---------- Direct Photo View (?foto=<id>) ----------
+      function renderDirectPhoto() {
+        const wrap = el('directContent');
+        const id = state.directPhotoId;
+
+        if (!state.directLinksEnabled) {
+          const sig = 'DISABLED';
+          if (state.lastDirectSig === sig) return;
+          state.lastDirectSig = sig;
+          wrap.textContent = '';
+          const box = document.createElement('div');
+          box.className = 'empty-box';
+          const h = document.createElement('h2');
+          h.textContent = 'Direkte Foto-Links sind deaktiviert';
+          const p = document.createElement('p');
+          p.style.marginBottom = '16px';
+          p.textContent = 'Alle aktuellen Fotos findest du in der Live-Galerie.';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-primary';
+          btn.textContent = 'Zur Live-Galerie';
+          btn.addEventListener('click', goHomeGallery);
+          box.append(h, p, btn);
+          wrap.appendChild(box);
+          return;
+        }
+
+        const now = nowServer();
+        const photo = state.photos.find((p) => p.id === id && p.expiresAt > now);
+        if (!photo) {
+          const sig = 'MISSING:' + id;
+          if (state.lastDirectSig === sig) return;
+          state.lastDirectSig = sig;
+          wrap.textContent = '';
+          const box = document.createElement('div');
+          box.className = 'empty-box';
+          const h = document.createElement('h2');
+          h.textContent = 'Foto nicht mehr verfügbar';
+          const p = document.createElement('p');
+          p.style.marginBottom = '16px';
+          p.textContent = 'Dieses Foto wurde nach Ablauf der Speicherzeit automatisch aus Datenschutzgründen gelöscht.';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-primary';
+          btn.textContent = 'Zur Live-Galerie';
+          btn.addEventListener('click', goHomeGallery);
+          box.append(h, p, btn);
+          wrap.appendChild(box);
+          return;
+        }
+
+        const sig = 'OK:' + photo.id;
+        if (state.lastDirectSig !== sig) {
+          state.lastDirectSig = sig;
+          wrap.textContent = '';
+
+          const card = document.createElement('div');
+          card.className = 'direct-card';
+
+          const media = document.createElement('div');
+          media.className = 'direct-media';
+          media.addEventListener('click', () => openLightbox(photo.id));
           const img = document.createElement('img');
           img.src = photoUrl(photo.id);
-          img.alt = 'Foto vom ' + fmtTime(photo.createdAt) + ' Uhr';
-          img.loading = 'lazy';
-          wrap.appendChild(img);
+          img.alt = 'Dein Foto vom Tag der offenen Tür';
+          media.appendChild(img);
 
           const track = document.createElement('div');
           track.className = 'progress-track';
-          const fill = document.createElement('div');
-          fill.className = 'progress-fill';
-          fill.dataset.barExpires = String(photo.expiresAt);
-          fill.dataset.barDuration = String(Math.max(1000, photo.expiresAt - photo.createdAt));
-          track.appendChild(fill);
-          wrap.appendChild(track);
-          card.appendChild(wrap);
+          const bar = document.createElement('div');
+          bar.className = 'progress-bar';
+          bar.id = 'directProgressBar';
+          track.appendChild(bar);
 
           const body = document.createElement('div');
-          body.className = 'card-body';
+          body.className = 'direct-body';
 
           const meta = document.createElement('div');
-          meta.className = 'card-meta';
-          const left = document.createElement('span');
-          left.textContent = fmtTime(photo.createdAt) + ' Uhr · ';
+          meta.className = 'photo-meta tabular';
           const cd = document.createElement('span');
-          cd.className = 'mono';
-          cd.dataset.cdExpires = String(photo.expiresAt);
-          left.appendChild(cd);
-          const warn = document.createElement('span');
-          warn.className = 'warn-text hidden';
-          warn.dataset.warnExpires = String(photo.expiresAt);
-          warn.textContent = 'Gleich gelöscht';
-          meta.append(left, warn);
-          body.appendChild(meta);
+          cd.className = 'photo-countdown';
+          cd.id = 'directCountdown';
+          const info = document.createElement('span');
+          const dimText = photo.width && photo.height ? `${photo.width}×${photo.height} · ` : '';
+          info.textContent = 'Original · ' + dimText + formatBytes(photo.sizeBytes);
+          meta.append(cd, info);
 
           const actions = document.createElement('div');
-          actions.className = 'card-actions';
-          const saveBtn = document.createElement('button');
-          saveBtn.type = 'button';
-          saveBtn.className = 'btn btn-dark btn-save';
-          saveBtn.textContent = 'In Fotos sichern';
-          saveBtn.addEventListener('click', () => savePhoto(photo, false));
-          actions.appendChild(saveBtn);
+          actions.className = 'direct-actions';
 
-          if (state.directLinksEnabled) {
-            const linkBtn = document.createElement('button');
-            linkBtn.type = 'button';
-            linkBtn.className = 'btn btn-outline btn-icon';
-            linkBtn.title = 'Persönlichen Link kopieren';
-            linkBtn.textContent = 'Link';
-            linkBtn.addEventListener('click', () => copyDirectLink(photo.id));
-            actions.appendChild(linkBtn);
-          }
+          const primaryBtn = document.createElement('button');
+          primaryBtn.type = 'button';
+          primaryBtn.className = 'btn btn-primary btn-full';
+          primaryBtn.style.minHeight = '48px';
+          primaryBtn.textContent = canShareFiles() ? 'In Fotos sichern (Original)' : 'Original herunterladen';
+          primaryBtn.addEventListener('click', () => savePhotoLossless(photo, primaryBtn));
+          actions.appendChild(primaryBtn);
 
-          if (isMobile()) {
+          if (canShareFiles()) {
             const dlBtn = document.createElement('button');
             dlBtn.type = 'button';
-            dlBtn.className = 'btn btn-outline btn-icon';
-            dlBtn.title = 'Original direkt laden';
-            dlBtn.textContent = '↓';
-            dlBtn.addEventListener('click', () => savePhoto(photo, true));
+            dlBtn.className = 'btn btn-secondary btn-full';
+            dlBtn.textContent = 'Direkt-Download';
+            dlBtn.addEventListener('click', () => triggerDirectDownload(photo));
             actions.appendChild(dlBtn);
           }
 
-          if (state.teamToken) {
-            const delBtn = document.createElement('button');
-            delBtn.type = 'button';
-            delBtn.className = 'btn btn-danger btn-icon';
-            delBtn.title = 'Sofort löschen';
-            delBtn.textContent = '✕';
-            delBtn.addEventListener('click', () => deletePhoto(photo.id));
-            actions.appendChild(delBtn);
-          }
-          body.appendChild(actions);
-          card.appendChild(body);
-          grid.appendChild(card);
+          body.append(meta, actions);
+          card.append(media, track, body);
+          wrap.appendChild(card);
         }
-        updateCountdowns();
+
+        updateDirectCountdown();
       }
 
-      function renderManageList() {
-        if (!state.teamToken) return;
-        const list = activePhotos();
-        $('manageStats').textContent = list.length + ' / ' + state.maxPhotos + ' belegt';
-        const key = list.map((p) => p.id).join(',') + '|' + state.directLinksEnabled;
-        if (key === state.lastManageKey) return;
-        state.lastManageKey = key;
-
-        const box = $('manageList');
-        box.textContent = '';
-        if (list.length === 0) {
-          const empty = document.createElement('div');
-          empty.className = 'list-item';
-          empty.style.color = '#71717A';
-          empty.textContent = 'Aktuell sind keine Fotos live.';
-          box.appendChild(empty);
+      function updateDirectCountdown() {
+        const now = nowServer();
+        const photo = state.photos.find((p) => p.id === state.directPhotoId);
+        if (!photo || photo.expiresAt <= now) {
+          renderDirectPhoto();
           return;
         }
-        for (const p of list) {
-          const row = document.createElement('div');
-          row.className = 'list-item';
-          const left = document.createElement('div');
-          left.className = 'list-left';
-          const img = document.createElement('img');
-          img.className = 'list-thumb';
-          img.src = photoUrl(p.id);
-          const info = document.createElement('div');
-          const t = document.createElement('div');
-          t.style.fontWeight = '500';
-          t.textContent = fmtTime(p.createdAt) + ' Uhr · ' + fmtSize(p.sizeBytes);
-          const cd = document.createElement('div');
-          cd.className = 'submeta mono';
-          cd.dataset.cdExpires = String(p.expiresAt);
-          info.append(t, cd);
-          left.append(img, info);
+        const rem = Math.max(0, photo.expiresAt - now);
+        const total = Math.max(1000, photo.expiresAt - photo.createdAt);
+        const ratio = Math.max(0, Math.min(1, rem / total));
 
-          const rightBtns = document.createElement('div');
-          rightBtns.style.display = 'flex';
-          rightBtns.style.gap = '6px';
+        const cd = el('directCountdown');
+        const bar = el('directProgressBar');
+        if (cd) {
+          cd.textContent = 'Löscht in ' + formatCountdown(rem);
+          cd.classList.toggle('warn', rem <= 60000 && rem > 20000);
+          cd.classList.toggle('danger', rem <= 20000);
+        }
+        if (bar) {
+          bar.style.transform = `scaleX(${ratio.toFixed(4)})`;
+          bar.classList.toggle('warn', rem <= 60000 && rem > 20000);
+          bar.classList.toggle('danger', rem <= 20000);
+        }
+      }
+
+      function goHomeGallery() {
+        state.directPhotoId = null;
+        if (window.location.search) {
+          window.history.replaceState({}, '', '/');
+        }
+        setView('gallery');
+      }
+
+      // ---------- Lightbox ----------
+      function openLightbox(photoId) {
+        const photo = state.photos.find((p) => p.id === photoId);
+        if (!photo) return;
+        state.lightboxPhotoId = photo.id;
+        el('lightboxImg').src = photoUrl(photo.id);
+        el('lightboxSaveBtn').textContent = canShareFiles() ? 'In Fotos sichern' : 'Original laden';
+        el('lightboxCopyBtn').classList.toggle('hidden', !state.directLinksEnabled);
+        el('lightbox').classList.remove('hidden');
+        updateLightboxCountdown();
+      }
+
+      function closeLightbox() {
+        state.lightboxPhotoId = null;
+        el('lightbox').classList.add('hidden');
+      }
+
+      function updateLightboxCountdown() {
+        const photo = state.photos.find((p) => p.id === state.lightboxPhotoId);
+        if (!photo || photo.expiresAt <= nowServer()) {
+          closeLightbox();
+          return;
+        }
+        const rem = Math.max(0, photo.expiresAt - nowServer());
+        const dim = photo.width && photo.height ? ` · ${photo.width}×${photo.height}` : '';
+        el('lightboxMeta').textContent = `Löscht in ${formatCountdown(rem)}${dim} · ${formatBytes(photo.sizeBytes)}`;
+      }
+
+      // ---------- Kiosk Modes (Aula Beamer & OBS Szene 2) ----------
+      function revealKioskBar() {
+        const bar = el('kioskBar');
+        bar.classList.remove('hide');
+        clearTimeout(state.kioskHideTimer);
+        state.kioskHideTimer = setTimeout(() => {
+          bar.classList.add('hide');
+        }, 3000);
+      }
+
+      function updateKioskBarButtons() {
+        el('kioskBtn2').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 2);
+        el('kioskBtn3').classList.toggle('active', state.kioskMode === 'gallery' && state.kioskCount === 3);
+        el('kioskBtnSingle').classList.toggle('active', state.kioskMode === 'single');
+      }
+
+      function renderKiosk() {
+        const stage = el('kioskStage');
+        const now = nowServer();
+        const active = state.photos.filter((p) => p.expiresAt > now);
+
+        if (active.length === 0) {
+          const sig = 'KIOSK_EMPTY:' + state.kioskMode;
+          if (state.lastKioskSig === sig) return;
+          state.lastKioskSig = sig;
+          stage.textContent = '';
+          const empty = document.createElement('div');
+          empty.className = 'kiosk-empty';
+          const h = document.createElement('h2');
+          h.style.fontSize = 'clamp(1.2rem, 2.6vw, 1.8rem)';
+          h.style.color = '#ffffff';
+          h.textContent = 'Bereit für das nächste Foto';
+          const p = document.createElement('p');
+          p.textContent = 'Neue Aufnahmen erscheinen hier automatisch in wenigen Sekunden.';
+          empty.append(h, p);
+          stage.appendChild(empty);
+          return;
+        }
+
+        if (state.kioskMode === 'single') {
+          const latest = active[0];
+          const showQr = state.directLinksEnabled;
+          const sig = `SINGLE:${latest.id}|QR:${showQr ? '1' : '0'}`;
+          if (state.lastKioskSig !== sig) {
+            state.lastKioskSig = sig;
+            stage.textContent = '';
+
+            const wrap = document.createElement('div');
+            wrap.className = 'kiosk-single';
+
+            const media = document.createElement('div');
+            media.className = 'kiosk-single-media';
+            const img = document.createElement('img');
+            img.src = photoUrl(latest.id);
+            img.alt = 'Aktuelles Foto';
+            media.appendChild(img);
+            wrap.appendChild(media);
+
+            if (showQr) {
+              const link = personalPhotoUrl(latest.id);
+              const panel = document.createElement('aside');
+              panel.className = 'kiosk-qr-panel';
+
+              const title = document.createElement('div');
+              title.className = 'kiosk-qr-title';
+              title.textContent = 'Dein Foto scannen';
+
+              const sub = document.createElement('div');
+              sub.className = 'kiosk-qr-sub';
+              sub.textContent = 'QR-Code mit der Handy-Kamera scannen und in Originalqualität sichern.';
+
+              const qrBox = document.createElement('div');
+              qrBox.className = 'kiosk-qr-box';
+              qrBox.appendChild(createQrSvgElement(link));
+
+              const urlBox = document.createElement('div');
+              urlBox.className = 'kiosk-qr-url';
+              urlBox.textContent = link;
+
+              const timer = document.createElement('div');
+              timer.className = 'kiosk-qr-timer tabular';
+              timer.id = 'kioskSingleTimer';
+              timer.dataset.photoId = latest.id;
+
+              panel.append(title, sub, qrBox, urlBox, timer);
+              wrap.appendChild(panel);
+            }
+
+            stage.appendChild(wrap);
+          }
+
+          updateKioskCountdown();
+          return;
+        }
+
+        // Kiosk 1: Puristisch (2 oder 3 Fotos)
+        const shown = active.slice(0, state.kioskCount);
+        const sig = `GALLERY:${state.kioskCount}:` + shown.map((p) => p.id).join(',');
+        if (state.lastKioskSig === sig) return;
+        state.lastKioskSig = sig;
+        stage.textContent = '';
+
+        const grid = document.createElement('div');
+        grid.className = `kiosk-gallery cols-${Math.min(state.kioskCount, shown.length)}`;
+        for (const p of shown) {
+          const slot = document.createElement('div');
+          slot.className = 'kiosk-photo-slot';
+          const img = document.createElement('img');
+          img.src = photoUrl(p.id);
+          img.alt = 'Beamer-Foto';
+          slot.appendChild(img);
+          grid.appendChild(slot);
+        }
+        stage.appendChild(grid);
+      }
+
+      function updateKioskCountdown() {
+        const timerEl = el('kioskSingleTimer');
+        if (!timerEl) return;
+        const p = state.photos.find((item) => item.id === timerEl.dataset.photoId);
+        if (!p || p.expiresAt <= nowServer()) {
+          renderKiosk();
+          return;
+        }
+        timerEl.textContent = 'Verfügbar noch ' + formatCountdown(p.expiresAt - nowServer());
+      }
+
+      // ---------- Admin Auth & Tabs ----------
+      function updateAuthUI() {
+        const loggedIn = Boolean(state.token);
+        el('pinGate').classList.toggle('hidden', loggedIn);
+        el('adminPanel').classList.toggle('hidden', !loggedIn);
+        el('logoutBtn').classList.toggle('hidden', !loggedIn);
+
+        if (!state.pinConfigured) {
+          el('pinGateTitle').textContent = 'Team-PIN einmalig festlegen';
+          el('pinGateSub').textContent = 'Wähle eine PIN (4–32 Zeichen), um den Upload- und Admin-Bereich zu schützen.';
+          el('pinSubmitBtn').textContent = 'PIN festlegen & anmelden';
+        } else {
+          el('pinGateTitle').textContent = 'Team-Anmeldung';
+          el('pinGateSub').textContent = 'Bitte Team-PIN eingeben, um Fotos hochzuladen oder Einstellungen zu ändern.';
+          el('pinSubmitBtn').textContent = 'Anmelden';
+        }
+
+        if (loggedIn) {
+          renderAdminPhotos();
+          syncSettingsControls();
+          updateKioskUrlDisplays();
+        }
+      }
+
+      function setAdminTab(tabName) {
+        state.activeTab = tabName;
+        document.querySelectorAll('.tab-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        el('tab-upload').classList.toggle('hidden', tabName !== 'upload');
+        el('tab-config').classList.toggle('hidden', tabName !== 'config');
+        el('tab-kiosk').classList.toggle('hidden', tabName !== 'kiosk');
+      }
+
+      function renderAdminPhotos() {
+        if (!state.token) return;
+        const now = nowServer();
+        const active = state.photos.filter((p) => p.expiresAt > now);
+        el('adminPhotoCount').textContent = `${active.length} von max. ${state.maxPhotos} Fotos aktiv`;
+
+        const sig = active.map((p) => p.id).join(',') + '|L:' + (state.directLinksEnabled ? '1' : '0');
+        const list = el('adminPhotoList');
+        if (sig === state.lastAdminSig) {
+          updateAdminCountdowns();
+          return;
+        }
+        state.lastAdminSig = sig;
+        list.textContent = '';
+
+        if (active.length === 0) {
+          const empty = document.createElement('p');
+          empty.style.fontSize = '0.88rem';
+          empty.style.color = 'var(--text-muted)';
+          empty.textContent = 'Aktuell sind keine Fotos online.';
+          list.appendChild(empty);
+          return;
+        }
+
+        for (const p of active) {
+          const row = document.createElement('div');
+          row.className = 'admin-photo-row';
+          row.dataset.photoId = p.id;
+
+          const thumb = document.createElement('img');
+          thumb.className = 'admin-thumb';
+          thumb.src = photoUrl(p.id);
+          thumb.alt = '';
+
+          const info = document.createElement('div');
+          info.className = 'admin-photo-info';
+          const name = document.createElement('div');
+          name.className = 'admin-photo-name';
+          name.textContent = p.fileName;
+          const sub = document.createElement('div');
+          sub.className = 'admin-photo-sub tabular';
+          sub.dataset.role = 'admin-cd';
+          info.append(name, sub);
+
+          const btns = document.createElement('div');
+          btns.className = 'admin-photo-btns';
 
           if (state.directLinksEnabled) {
             const copyBtn = document.createElement('button');
             copyBtn.type = 'button';
-            copyBtn.className = 'btn btn-outline btn-sm';
+            copyBtn.className = 'btn btn-secondary btn-compact';
             copyBtn.textContent = 'Link';
-            copyBtn.addEventListener('click', () => copyDirectLink(p.id));
-            rightBtns.appendChild(copyBtn);
+            copyBtn.addEventListener('click', () => copyText(personalPhotoUrl(p.id), 'Foto-Link kopiert'));
+            btns.appendChild(copyBtn);
           }
 
-          const del = document.createElement('button');
-          del.type = 'button';
-          del.className = 'btn btn-danger btn-sm';
-          del.textContent = 'Sofort löschen';
-          del.addEventListener('click', () => deletePhoto(p.id));
-          rightBtns.appendChild(del);
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn btn-danger btn-compact';
+          delBtn.textContent = 'Löschen';
+          delBtn.addEventListener('click', () => deletePhoto(p.id, delBtn));
+          btns.appendChild(delBtn);
 
-          row.append(left, rightBtns);
-          box.appendChild(row);
+          row.append(thumb, info, btns);
+          list.appendChild(row);
         }
-        updateCountdowns();
+
+        updateAdminCountdowns();
       }
 
-      function renderKiosk(force = false) {
-        if (state.view !== 'kiosk') return;
-        const list = activePhotos();
-
-        // Kiosk-Modus 2: Letztes Foto + Persönlicher Link & QR (nur wenn Links aktiviert sind)
-        if (state.kioskMode === 'single' && state.directLinksEnabled) {
-          const latest = list[0] || null;
-          const key = 'single:' + (latest ? latest.id : 'none') + ':' + state.directLinksEnabled;
-          if (!force && key === state.lastKioskKey) { updateCountdowns(); return; }
-          state.lastKioskKey = key;
-
-          const stage = $('kioskStage');
-          $('kioskEmpty').classList.toggle('hidden', Boolean(latest));
-          stage.classList.toggle('hidden', !latest);
-          stage.textContent = '';
-          if (!latest) return;
-
-          stage.className = 'kiosk-stage single-link';
-
-          const frame = document.createElement('div');
-          frame.className = 'kiosk-frame';
-          const img = document.createElement('img');
-          img.src = photoUrl(latest.id);
-          img.alt = 'Neuestes Foto';
-          frame.appendChild(img);
-          stage.appendChild(frame);
-
-          const panel = document.createElement('aside');
-          panel.className = 'kiosk-qr-panel';
-
-          const personalUrl = directPhotoShareUrl(latest.id);
-          const qrBox = document.createElement('div');
-          qrBox.className = 'kiosk-qr-box';
-          const svg = createQrSvgElement(personalUrl);
-          if (svg) {
-            qrBox.appendChild(svg);
-          } else {
-            qrBox.style.color = '#111';
-            qrBox.style.fontSize = '12px';
-            qrBox.textContent = 'QR nicht verfügbar';
-          }
-          panel.appendChild(qrBox);
-
-          const textWrap = document.createElement('div');
-          textWrap.style.display = 'flex';
-          textWrap.style.flexDirection = 'column';
-          textWrap.style.gap = '10px';
-          textWrap.style.width = '100%';
-
-          const title = document.createElement('div');
-          title.className = 'kiosk-qr-title';
-          title.textContent = 'Dein persönliches Foto';
-
-          const sub = document.createElement('div');
-          sub.className = 'kiosk-qr-sub';
-          sub.textContent = 'Scanne den QR-Code mit dem Handy, um genau dieses Bild in voller Qualität zu sichern.';
-
-          const cd = document.createElement('div');
-          cd.className = 'kiosk-qr-cd mono';
-          cd.dataset.cdExpires = String(latest.expiresAt);
-
-          const urlBox = document.createElement('div');
-          urlBox.className = 'kiosk-qr-url mono';
-          urlBox.textContent = personalUrl;
-
-          textWrap.append(title, sub, cd, urlBox);
-          panel.appendChild(textWrap);
-          stage.appendChild(panel);
-          updateCountdowns();
-          return;
-        }
-
-        // Kiosk-Modus 1: Puristisch (nur die letzten 2 oder 3 Fotos, ohne Text/Links)
-        const shown = list.slice(0, state.kioskCount);
-        const key = 'gallery:' + state.kioskCount + ':' + shown.map((p) => p.id).join(',');
-        if (!force && key === state.lastKioskKey) return;
-        state.lastKioskKey = key;
-
-        const stage = $('kioskStage');
-        $('kioskEmpty').classList.toggle('hidden', shown.length > 0);
-        stage.classList.toggle('hidden', shown.length === 0);
-        stage.textContent = '';
-        if (shown.length === 0) return;
-
-        stage.className = 'kiosk-stage count-' + shown.length;
-        const makeFrame = (photo) => {
-          const f = document.createElement('div');
-          f.className = 'kiosk-frame';
-          const img = document.createElement('img');
-          img.src = photoUrl(photo.id);
-          img.alt = 'Live-Aufnahme';
-          f.appendChild(img);
-          return f;
-        };
-
-        if (shown.length <= 2) {
-          shown.forEach((p) => stage.appendChild(makeFrame(p)));
-        } else {
-          stage.appendChild(makeFrame(shown[0]));
-          const side = document.createElement('div');
-          side.className = 'kiosk-side';
-          side.appendChild(makeFrame(shown[1]));
-          side.appendChild(makeFrame(shown[2]));
-          stage.appendChild(side);
-        }
-      }
-
-      function updateCountdowns() {
-        const now = serverNow();
-        document.querySelectorAll('[data-cd-expires]').forEach((el) => {
-          const rem = Math.max(0, Number(el.dataset.cdExpires) - now);
-          el.textContent = 'Noch ' + fmtCountdown(rem);
-          el.style.color = rem <= 30000 ? '#B45309' : '';
+      function updateAdminCountdowns() {
+        const now = nowServer();
+        const map = new Map(state.photos.map((p) => [p.id, p]));
+        document.querySelectorAll('#adminPhotoList .admin-photo-row').forEach((row) => {
+          const p = map.get(row.dataset.photoId);
+          const sub = row.querySelector('[data-role="admin-cd"]');
+          if (!p || !sub) return;
+          sub.textContent = `Löscht in ${formatCountdown(p.expiresAt - now)} · ${formatBytes(p.sizeBytes)}`;
         });
-        document.querySelectorAll('[data-bar-expires]').forEach((el) => {
-          const rem = Math.max(0, Number(el.dataset.barExpires) - now);
-          const dur = Number(el.dataset.barDuration) || state.ttlMs;
-          el.style.transform = 'scaleX(' + Math.max(0, Math.min(1, rem / dur)) + ')';
-          el.classList.toggle('warn', rem <= 30000);
-        });
-        document.querySelectorAll('[data-warn-expires]').forEach((el) => {
-          const rem = Math.max(0, Number(el.dataset.warnExpires) - now);
-          el.classList.toggle('hidden', rem > 30000);
-        });
-        if (state.lightboxId) updateLightboxMeta();
       }
 
-      function renderAll() {
-        renderGallery();
-        renderManageList();
-        renderKiosk();
-        if (state.lightboxId && !activePhotos().some((p) => p.id === state.lightboxId)) closeLightbox();
-      }
-
-      // Lightbox
-      function openLightbox(id) {
-        state.lightboxId = id;
-        $('lightbox').classList.remove('hidden');
-        $('lbCopyLinkBtn').classList.toggle('hidden', !state.directLinksEnabled);
-        $('lbTip').textContent = isIOS()
-          ? 'iPhone/iPad: „In Fotos sichern“ tippen → im Menü „Bild sichern“ wählen.'
-          : 'Originaldatei ohne Komprimierung — direkt für deine Fotomediathek.';
-        updateLightboxMeta();
-      }
-      function closeLightbox() {
-        state.lightboxId = null;
-        $('lightbox').classList.add('hidden');
-        if (window.location.search.includes('foto=')) {
-          window.history.replaceState({}, '', window.location.pathname);
-        }
-      }
-      function updateLightboxMeta() {
-        const list = activePhotos();
-        const idx = list.findIndex((p) => p.id === state.lightboxId);
-        if (idx < 0) return closeLightbox();
-        const p = list[idx];
-        $('lbImg').src = photoUrl(p.id);
-        $('lbCopyLinkBtn').classList.toggle('hidden', !state.directLinksEnabled);
-        const dims = p.width && p.height ? ' · ' + p.width + '×' + p.height : '';
-        $('lbMeta').textContent = fmtTime(p.createdAt) + ' Uhr · Noch ' + fmtCountdown(p.expiresAt - serverNow()) + dims + ' · ' + fmtSize(p.sizeBytes);
-        $('lbPrevBtn').classList.toggle('hidden', idx <= 0);
-        $('lbNextBtn').classList.toggle('hidden', idx >= list.length - 1);
-      }
-
-      // Auth & Settings
-      function renderSettingsAuth() {
-        const authed = Boolean(state.teamToken);
-        $('pinGate').classList.toggle('hidden', authed);
-        $('settingsHub').classList.toggle('hidden', !authed);
-        if (!authed) {
-          const setup = !state.pinConfigured;
-          $('pinTitle').textContent = setup ? 'Team-PIN einmalig festlegen' : 'Einstellungen (Team-PIN)';
-          $('pinDesc').textContent = setup
-            ? 'Lege einmalig eine Team-PIN fest, um Upload, Ordner-Automatik, Speicherdauer und Beamer-Kiosk freizuschalten.'
-            : 'Melde dich mit der Team-PIN an, um Fotos hochzuladen, die Speicherdauer einzustellen oder einen Kiosk-Modus zu starten.';
-          $('pinLabel').textContent = setup ? 'Neue Team-PIN (4–32 Zeichen)' : 'Team-PIN';
-          $('pinConfirmWrap').classList.toggle('hidden', !setup);
-          $('pinConfirmInput').required = setup;
-          $('pinSubmitBtn').textContent = setup ? 'PIN speichern & öffnen' : 'Anmelden';
-        } else {
-          renderManageList();
-        }
-      }
-
-      async function deletePhoto(id) {
-        if (!state.teamToken) return;
-        const res = await fetch('/api/photos/' + encodeURIComponent(id), {
-          method: 'DELETE',
-          headers: { Authorization: 'Bearer ' + state.teamToken },
-        });
-        if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); return; }
-        state.photos = state.photos.filter((p) => p.id !== id);
-        renderAll();
-        showToast('Foto sofort gelöscht.');
-      }
-
+      // ---------- Upload & Delete ----------
       async function uploadSingleFile(file) {
-        if (!state.teamToken) throw new Error('Bitte zuerst anmelden.');
-        if (file.size > MAX_FILE_BYTES) throw new Error('Größer als 24 MB.');
+        if (file.size === 0 || file.size > MAX_FILE_BYTES) {
+          throw new Error(`„${file.name}“ ist größer als 24 MB.`);
+        }
         const fd = new FormData();
         fd.append('photo', file, file.name);
-        const res = await fetch('/api/photos', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + state.teamToken },
-          body: fd,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); }
-        if (!res.ok || !data.photo) throw new Error(data.error || 'Upload fehlgeschlagen.');
-        if (!state.photos.some((p) => p.id === data.photo.id)) {
-          state.photos.unshift(data.photo);
-          state.photos.sort((a, b) => b.createdAt - a.createdAt);
+        const { ok, data } = await apiFetch('/api/photos', { method: 'POST', body: fd });
+        if (!ok) {
+          throw new Error(data.error || `Upload fehlgeschlagen (${file.name})`);
         }
-        renderAll();
-        return data.photo;
-      }
-
-      function addLog(containerId, name, detail, isErr = false) {
-        const box = $(containerId);
-        box.classList.remove('hidden');
-        const row = document.createElement('div');
-        row.className = 'list-item';
-        const l = document.createElement('span');
-        l.className = 'truncate';
-        l.textContent = name;
-        const r = document.createElement('span');
-        r.style.whiteSpace = 'nowrap';
-        r.style.color = isErr ? '#B91C1C' : '#52525B';
-        r.textContent = detail;
-        row.append(l, r);
-        box.prepend(row);
-        while (box.children.length > 6) box.lastChild.remove();
+        return data.photo || data;
       }
 
       async function handleManualFiles(fileList) {
-        for (const file of Array.from(fileList)) {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        const box = el('uploadStatus');
+        box.className = 'notice';
+        box.classList.remove('hidden');
+
+        let done = 0;
+        let failed = [];
+        for (const f of files) {
+          box.textContent = `Lade hoch (${done + 1}/${files.length}): ${f.name}…`;
           try {
-            await uploadSingleFile(file);
-            addLog('uploadLog', file.name, `Live für ${state.ttlMinutes} Min.`);
+            await uploadSingleFile(f);
+            done += 1;
           } catch (err) {
-            addLog('uploadLog', file.name, err.message, true);
-            showToast(err.message, true);
+            failed.push(err.message || f.name);
           }
+        }
+
+        await fetchPhotos();
+        if (failed.length === 0) {
+          box.className = 'notice notice-ok';
+          box.textContent = done === 1 ? '1 Foto erfolgreich hochgeladen.' : `${done} Fotos erfolgreich hochgeladen.`;
+        } else {
+          box.className = 'notice notice-err';
+          box.textContent = `${done} hochgeladen, Fehler: ${failed.join(' · ')}`;
         }
       }
 
-      // Sicheres Verschieben nach Archiv/ + Löschen aus Eingang/
-      async function moveFileToArchive(sourceDir, archiveDir, fileName, fileObj) {
-        let targetName = fileName;
-        try {
-          await archiveDir.getFileHandle(targetName);
-          const dot = fileName.lastIndexOf('.');
-          const stamp = '-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '');
-          targetName = dot > 0 ? fileName.slice(0, dot) + stamp + fileName.slice(dot) : fileName + stamp;
-        } catch {}
-        const destHandle = await archiveDir.getFileHandle(targetName, { create: true });
-        const writable = await destHandle.createWritable();
-        try {
-          await writable.write(fileObj);
-          await writable.close();
-        } catch (writeErr) {
-          try { await writable.abort(); } catch {}
-          throw writeErr;
+      async function deletePhoto(id, btn) {
+        if (btn) btn.disabled = true;
+        const { ok, data } = await apiFetch('/api/photos/' + encodeURIComponent(id), { method: 'DELETE' });
+        if (!ok) {
+          showToast(data.error || 'Löschen fehlgeschlagen');
+          if (btn) btn.disabled = false;
+          return;
         }
-        await sourceDir.removeEntry(fileName);
+        showToast('Foto gelöscht');
+        await fetchPhotos();
+      }
+
+      // ---------- Server Settings (TTL & Personal Links) ----------
+      async function saveServerSettings(payload, msgEl) {
+        let res = await apiFetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 404 || res.status === 405) {
+          res = await apiFetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+        if (!res.ok) {
+          msgEl.className = 'notice notice-err';
+          msgEl.textContent = res.data.error || 'Speichern fehlgeschlagen.';
+          msgEl.classList.remove('hidden');
+          return false;
+        }
+        await fetchPhotos();
+        msgEl.className = 'notice notice-ok';
+        msgEl.textContent = 'Einstellung gespeichert und sofort aktiv.';
+        msgEl.classList.remove('hidden');
+        return true;
+      }
+
+      // ---------- Automatic Folder Watcher (Mac & Windows) ----------
+      function addWatcherLog(text) {
+        const box = el('watcherLog');
+        box.classList.remove('hidden');
+        const line = document.createElement('div');
+        const t = new Date().toLocaleTimeString('de-DE');
+        line.textContent = `[${t}] ${text}`;
+        box.prepend(line);
+        while (box.children.length > 30) {
+          box.lastElementChild.remove();
+        }
+      }
+
+      function updateWatcherStatusUI() {
+        const box = el('watcherStateBox');
+        if (!state.watcherActive) {
+          el('startWatchBtn').classList.remove('hidden');
+          el('stopWatchBtn').classList.add('hidden');
+          return;
+        }
+        el('startWatchBtn').classList.add('hidden');
+        el('stopWatchBtn').classList.remove('hidden');
+        box.className = 'notice notice-ok';
+        box.classList.remove('hidden');
+        const modeLabel =
+          state.watcherMode === 'archive'
+            ? `Archiv-Modus („${state.watcherRootHandle.name}/Eingang“ → „Archiv“)`
+            : state.watcherMode === 'delete'
+              ? `Lösch-Modus („${state.watcherRootHandle.name}“)`
+              : `Behalten-Modus („${state.watcherRootHandle.name}“)`;
+        box.textContent = `Aktiv: ${modeLabel} · Hochgeladen: ${state.watcherStats.uploaded}${state.watcherMode === 'archive' ? ' · Archiviert: ' + state.watcherStats.archived : ''}`;
+      }
+
+      function isSupportedImageName(name) {
+        return /\.(jpe?g|png|webp)$/i.test(name) && !name.startsWith('.');
+      }
+
+      async function archiveFileSafely(archiveDir, origName, bytes) {
+        let targetName = origName;
+        let exists = false;
+        try {
+          await archiveDir.getFileHandle(targetName, { create: false });
+          exists = true;
+        } catch {
+          exists = false;
+        }
+        if (exists) {
+          const dot = origName.lastIndexOf('.');
+          const base = dot > 0 ? origName.slice(0, dot) : origName;
+          const ext = dot > 0 ? origName.slice(dot) : '';
+          targetName = `${base}_${Date.now()}${ext}`;
+        }
+        const outHandle = await archiveDir.getFileHandle(targetName, { create: true });
+        const writable = await outHandle.createWritable();
+        await writable.write(bytes);
+        await writable.close();
         return targetName;
       }
 
-      // Automatischer Ordner-Watcher (Mac & Windows in Chrome/Edge)
-      async function scanWatchFolder() {
-        if (!state.watchDirHandle || !state.watching || !state.teamToken) return;
-        const seen = new Set();
-        const mode = state.activeFolderMode;
+      async function scanWatchedFolder() {
+        if (!state.watcherActive || state.watcherBusy || !state.watcherInHandle) return;
+        if (!state.token) {
+          stopFolderWatcher('Sitzung abgelaufen – Überwachung gestoppt.');
+          return;
+        }
+        state.watcherBusy = true;
         try {
-          for await (const [name, entry] of state.watchDirHandle.entries()) {
-            if (entry.kind !== 'file' || name.startsWith('.') || !/\.(jpe?g|png|webp)$/i.test(name)) continue;
-            seen.add(name);
-            if (inFlight.has(name)) continue;
-            const file = await entry.getFile().catch(() => null);
-            if (!file || file.size === 0) continue;
-            const sig = name + ':' + file.size + ':' + file.lastModified;
-            if (mode === 'keep' && keptUploaded.has(sig)) continue;
+          const currentNames = new Set();
+          for await (const [name, handle] of state.watcherInHandle.entries()) {
+            if (handle.kind !== 'file' || !isSupportedImageName(name)) continue;
+            currentNames.add(name);
 
-            const prev = stabilityMap.get(name);
-            if (!prev || prev.size !== file.size || prev.lm !== file.lastModified) {
-              stabilityMap.set(name, { size: file.size, lm: file.lastModified });
+            const file = await handle.getFile();
+            if (file.size === 0) continue;
+
+            const dedupeKey = `${name}:${file.size}:${file.lastModified}`;
+            if (state.watcherMode === 'keep' && state.watcherProcessed.has(dedupeKey)) {
               continue;
             }
 
-            inFlight.add(name);
-            try {
-              await uploadSingleFile(file);
-              state.uploadedViaWatcher += 1;
-              stabilityMap.delete(name);
+            // Schreib-Stabilität prüfen (wichtig für große OBS-PNGs)
+            const prev = state.watcherSeen.get(name);
+            if (!prev || prev.size !== file.size || prev.lastModified !== file.lastModified) {
+              state.watcherSeen.set(name, { size: file.size, lastModified: file.lastModified, stable: 1 });
+              continue;
+            }
+            if (prev.stable < 2) {
+              prev.stable += 1;
+              continue;
+            }
 
-              if (mode === 'archive' && state.archiveDirHandle) {
-                await moveFileToArchive(state.watchDirHandle, state.archiveDirHandle, name, file);
-                addLog('folderLog', name, 'Hochgeladen & nach Archiv verschoben');
-              } else if (mode === 'delete') {
-                await state.watchDirHandle.removeEntry(name);
-                addLog('folderLog', name, 'Hochgeladen & lokal gelöscht');
+            if (file.size > MAX_FILE_BYTES) {
+              addWatcherLog(`Übersprungen (> 24 MB): ${name}`);
+              state.watcherProcessed.add(dedupeKey);
+              continue;
+            }
+
+            try {
+              const buffer = await file.arrayBuffer();
+              const uploadFile = new File([buffer], name, { type: file.type || 'image/jpeg' });
+              await uploadSingleFile(uploadFile);
+              state.watcherStats.uploaded += 1;
+
+              if (state.watcherMode === 'archive' && state.watcherArchiveHandle) {
+                const savedName = await archiveFileSafely(state.watcherArchiveHandle, name, buffer);
+                await state.watcherInHandle.removeEntry(name);
+                state.watcherStats.archived += 1;
+                addWatcherLog(`Hochgeladen & archiviert → Archiv/${savedName}`);
+              } else if (state.watcherMode === 'delete') {
+                await state.watcherInHandle.removeEntry(name);
+                addWatcherLog(`Hochgeladen & lokal gelöscht: ${name}`);
               } else {
-                keptUploaded.add(sig);
-                addLog('folderLog', name, 'Hochgeladen (im Ordner behalten)');
+                state.watcherProcessed.add(dedupeKey);
+                addWatcherLog(`Hochgeladen (lokal behalten): ${name}`);
               }
-              updateFolderUI();
+
+              state.watcherSeen.delete(name);
+              updateWatcherStatusUI();
+              fetchPhotos();
             } catch (err) {
-              addLog('folderLog', name, err.message + ' (bleibt erhalten)', true);
-            } finally {
-              inFlight.delete(name);
+              state.watcherStats.errors += 1;
+              addWatcherLog(`Fehler bei ${name}: ${err.message || 'Unbekannt'}`);
             }
           }
-          for (const k of stabilityMap.keys()) { if (!seen.has(k)) stabilityMap.delete(k); }
+
+          for (const seenName of state.watcherSeen.keys()) {
+            if (!currentNames.has(seenName)) {
+              state.watcherSeen.delete(seenName);
+            }
+          }
         } catch (err) {
-          state.watching = false;
-          $('folderWarning').textContent = 'Ordner-Zugriff unterbrochen: ' + err.message;
-          $('folderWarning').classList.remove('hidden');
-          updateFolderUI();
+          addWatcherLog(`Ordner-Scan Fehler: ${err.message || 'Zugriff unterbrochen'}`);
+        } finally {
+          state.watcherBusy = false;
         }
       }
 
-      function updateFolderModeHint() {
-        const mode = $('folderModeSelect').value;
-        const hint = $('folderModeHint');
-        const btn = $('pickFolderBtn');
-        if (mode === 'archive') {
-          btn.textContent = 'Hauptordner auswählen';
-          hint.textContent = 'Wähle euren übergeordneten Hauptordner (z. B. Fotobox). Darin werden automatisch die Unterordner „Eingang“ (Zielordner für OBS) und „Archiv“ angelegt. Nach jedem Upload wird das Foto von „Eingang“ nach „Archiv“ verschoben.';
-        } else if (mode === 'delete') {
-          btn.textContent = 'Kamera-Ordner auswählen';
-          hint.textContent = 'Wähle direkt den OBS-/Kamera-Ordner. Nach erfolgreichem Upload wird die lokale Datei sofort gelöscht.';
-        } else {
-          btn.textContent = 'Kamera-Ordner auswählen';
-          hint.textContent = 'Wähle direkt den OBS-/Kamera-Ordner. Neue Fotos werden hochgeladen und bleiben unverändert im Ordner liegen.';
-        }
-      }
+      async function startFolderWatcher() {
+        if (!window.showDirectoryPicker) return;
+        const selected = document.querySelector('input[name="watchMode"]:checked');
+        state.watcherMode = selected ? selected.value : 'archive';
 
-      function updateFolderUI() {
-        const connected = Boolean(state.watchDirHandle);
-        $('pickFolderBtn').classList.toggle('hidden', connected);
-        $('pauseFolderBtn').classList.toggle('hidden', !connected);
-        $('stopFolderBtn').classList.toggle('hidden', !connected);
-        $('folderModeSelect').disabled = connected;
-        $('pauseFolderBtn').textContent = state.watching ? 'Pausieren' : 'Fortsetzen';
-        if (!connected) {
-          $('folderStatus').textContent = '';
-          return;
-        }
-        const pathLabel = state.activeFolderMode === 'archive'
-          ? state.rootDirHandle.name + '/Eingang → Archiv'
-          : state.rootDirHandle.name;
-        $('folderStatus').textContent = `${pathLabel} · ${state.watching ? 'Aktiv' : 'Pausiert'} · ${state.uploadedViaWatcher} übertragen`;
-      }
-
-      function revealKioskBar() {
-        $('kioskBar').classList.remove('hide');
-        $('kioskView').classList.remove('idle');
-        clearTimeout(kioskIdleTimer);
-        kioskIdleTimer = setTimeout(() => {
-          $('kioskBar').classList.add('hide');
-          $('kioskView').classList.add('idle');
-        }, 3000);
-      }
-
-      // Events
-      $('brandBtn').addEventListener('click', () => setView('gallery'));
-      $('backGalleryBtn').addEventListener('click', () => setView('gallery'));
-      $('settingsBtn').addEventListener('click', () => setView('settings'));
-      $('privacyLink').addEventListener('click', () => setView('privacy'));
-      $('privacyBackBtn').addEventListener('click', () => setView('gallery'));
-      $('folderModeSelect').addEventListener('change', updateFolderModeHint);
-      updateFolderModeHint();
-
-      $('pinForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        $('pinError').classList.add('hidden');
-        const pin = $('pinInput').value.trim();
-        const setup = !state.pinConfigured;
-        if (setup && pin !== $('pinConfirmInput').value.trim()) {
-          $('pinError').textContent = 'Die beiden PIN-Eingaben stimmen nicht überein.';
-          $('pinError').classList.remove('hidden');
-          return;
-        }
         try {
-          const res = await fetch(setup ? '/api/auth/setup' : '/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin }),
-          });
-          const data = await res.json();
-          if (!res.ok || !data.token) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
-          state.teamToken = data.token;
-          state.pinConfigured = true;
-          $('pinInput').value = '';
-          $('pinConfirmInput').value = '';
-          renderSettingsAuth();
-          syncOptionsAndKioskControls();
-          renderGallery();
-          showToast('Admin-Einstellungen freigeschaltet.');
+          const modePermission = state.watcherMode === 'keep' ? 'read' : 'readwrite';
+          const root = await window.showDirectoryPicker({ mode: modePermission });
+          state.watcherRootHandle = root;
+
+          if (state.watcherMode === 'archive') {
+            state.watcherInHandle = await root.getDirectoryHandle('Eingang', { create: true });
+            state.watcherArchiveHandle = await root.getDirectoryHandle('Archiv', { create: true });
+          } else {
+            state.watcherInHandle = root;
+            state.watcherArchiveHandle = null;
+          }
+
+          state.watcherSeen.clear();
+          state.watcherProcessed.clear();
+          state.watcherStats = { uploaded: 0, archived: 0, errors: 0 };
+          state.watcherActive = true;
+          updateWatcherStatusUI();
+          addWatcherLog(
+            state.watcherMode === 'archive'
+              ? `Überwachung gestartet. Bitte OBS/Kamera in „${root.name}/Eingang“ speichern lassen.`
+              : `Überwachung gestartet für „${root.name}“.`,
+          );
+          clearInterval(state.watcherTimer);
+          state.watcherTimer = setInterval(scanWatchedFolder, 800);
+          scanWatchedFolder();
         } catch (err) {
-          $('pinError').textContent = err.message;
-          $('pinError').classList.remove('hidden');
+          if (err && err.name === 'AbortError') return;
+          const box = el('watcherStateBox');
+          box.className = 'notice notice-err';
+          box.classList.remove('hidden');
+          box.textContent = 'Ordnerzugriff nicht erlaubt oder fehlgeschlagen.';
+        }
+      }
+
+      function stopFolderWatcher(reason = 'Überwachung gestoppt.') {
+        state.watcherActive = false;
+        clearInterval(state.watcherTimer);
+        state.watcherTimer = null;
+        updateWatcherStatusUI();
+        const box = el('watcherStateBox');
+        box.className = 'notice';
+        box.classList.remove('hidden');
+        box.textContent = reason;
+        addWatcherLog(reason);
+      }
+
+      // ---------- Events ----------
+      el('brandLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        goHomeGallery();
+      });
+
+      el('openSettingsBtn').addEventListener('click', () => setView('settings'));
+      el('openPrivacyBtn').addEventListener('click', () => setView('privacy'));
+      el('privacyBackBtn').addEventListener('click', goHomeGallery);
+      el('directBackBtn').addEventListener('click', goHomeGallery);
+      el('settingsBackBtn').addEventListener('click', goHomeGallery);
+
+      // PIN Login / Setup
+      el('pinForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pin = el('pinInput').value.trim();
+        const errBox = el('pinError');
+        errBox.classList.add('hidden');
+        if (!pin) return;
+
+        el('pinSubmitBtn').disabled = true;
+        const endpoint = state.pinConfigured ? '/api/auth/login' : '/api/auth/setup';
+        const { ok, data } = await apiFetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin }),
+        });
+        el('pinSubmitBtn').disabled = false;
+
+        if (!ok || !data.token) {
+          errBox.textContent = data.error || 'PIN nicht korrekt.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        state.token = data.token;
+        state.pinConfigured = true;
+        el('pinInput').value = '';
+        updateAuthUI();
+        showToast('Angemeldet');
+      });
+
+      el('logoutBtn').addEventListener('click', async () => {
+        if (state.watcherActive) stopFolderWatcher('Überwachung nach Abmeldung gestoppt.');
+        await apiFetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        state.token = null;
+        updateAuthUI();
+        showToast('Abgemeldet');
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => setAdminTab(btn.dataset.tab));
+      });
+
+      // Manual Upload
+      el('pickFilesBtn').addEventListener('click', () => el('fileInput').click());
+      el('fileInput').addEventListener('change', (e) => {
+        handleManualFiles(e.target.files);
+        e.target.value = '';
+      });
+
+      const dz = el('dropzone');
+      dz.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dz.classList.add('dragover');
+      });
+      dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+      dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files) {
+          handleManualFiles(e.dataTransfer.files);
         }
       });
 
-      $('logoutBtn').addEventListener('click', async () => {
-        const tok = state.teamToken;
-        state.teamToken = null;
-        state.watching = false;
-        state.rootDirHandle = null;
-        state.watchDirHandle = null;
-        state.archiveDirHandle = null;
-        clearInterval(watcherInterval);
-        updateFolderUI();
-        if (tok) fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }).catch(() => {});
-        renderSettingsAuth();
-        renderGallery();
-        showToast('Abgemeldet.');
-      });
+      // Folder Watcher UI
+      if (!window.showDirectoryPicker) {
+        el('watcherUnsupported').classList.remove('hidden');
+        el('watcherControls').classList.add('hidden');
+      }
 
-      document.querySelectorAll('.tab-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          $('tabUpload').classList.toggle('hidden', btn.dataset.tab !== 'upload');
-          $('tabOptions').classList.toggle('hidden', btn.dataset.tab !== 'options');
-          $('tabKiosk').classList.toggle('hidden', btn.dataset.tab !== 'kiosk');
-          syncOptionsAndKioskControls();
+      document.querySelectorAll('#watcherModeGrid .mode-option').forEach((opt) => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('#watcherModeGrid .mode-option').forEach((o) => o.classList.remove('selected'));
+          opt.classList.add('selected');
         });
       });
 
-      // Optionen: Speicherdauer & Persönliche Links
+      el('startWatchBtn').addEventListener('click', startFolderWatcher);
+      el('stopWatchBtn').addEventListener('click', () => stopFolderWatcher());
+
+      // TTL & Personal Links Settings
       document.querySelectorAll('#ttlPresets .preset-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-          $('ttlCustomInput').value = btn.dataset.min;
+          el('ttlCustomInput').value = btn.dataset.min;
           document.querySelectorAll('#ttlPresets .preset-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
         });
       });
 
-      $('ttlCustomInput').addEventListener('input', () => {
-        const val = Number($('ttlCustomInput').value);
-        document.querySelectorAll('#ttlPresets .preset-btn').forEach((b) => {
-          b.classList.toggle('active', Number(b.dataset.min) === val);
-        });
+      el('saveTtlBtn').addEventListener('click', async () => {
+        const val = Math.max(1, Math.min(60, Math.round(Number(el('ttlCustomInput').value) || 5)));
+        el('ttlCustomInput').value = String(val);
+        await saveServerSettings({ ttlMinutes: val }, el('ttlSaveMsg'));
       });
 
-      $('saveOptionsBtn').addEventListener('click', async () => {
-        if (!state.teamToken) return;
-        const ttlMinutes = Number.parseInt($('ttlCustomInput').value, 10);
-        const directLinksEnabled = $('directLinksToggle').checked;
-        if (!Number.isFinite(ttlMinutes) || ttlMinutes < 1 || ttlMinutes > 60) {
-          showToast('Bitte eine Speicherdauer zwischen 1 und 60 Minuten eingeben.', true);
-          return;
-        }
-        try {
-          const res = await fetch('/api/settings', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + state.teamToken,
-            },
-            body: JSON.stringify({ ttlMinutes, directLinksEnabled }),
-          });
-          const data = await res.json();
-          if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); return; }
-          if (!res.ok) throw new Error(data.error || 'Speichern fehlgeschlagen.');
-          state.ttlMinutes = data.ttlMinutes;
-          state.ttlMs = data.ttlMs;
-          state.directLinksEnabled = data.directLinksEnabled;
-          syncTtlLabels();
-          syncOptionsAndKioskControls();
-          renderAll();
-          showToast(`Gespeichert: ${data.ttlMinutes} Min. · Persönliche Links ${data.directLinksEnabled ? 'aktiv' : 'komplett deaktiviert'}.`);
-        } catch (err) {
-          showToast(err.message, true);
+      el('directLinksToggle').addEventListener('change', async (e) => {
+        const enabled = Boolean(e.target.checked);
+        const ok = await saveServerSettings({ directLinksEnabled: enabled }, el('linksSaveMsg'));
+        if (!ok) {
+          e.target.checked = !enabled;
         }
       });
 
-      // Manueller Upload
-      $('selectFilesBtn').addEventListener('click', () => $('fileInput').click());
-      $('openCameraBtn').addEventListener('click', () => $('cameraInput').click());
-      $('fileInput').addEventListener('change', (e) => { handleManualFiles(e.target.files); e.target.value = ''; });
-      $('cameraInput').addEventListener('change', (e) => { handleManualFiles(e.target.files); e.target.value = ''; });
-      const dz = $('dropzone');
-      dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
-      dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-      dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('drag'); handleManualFiles(e.dataTransfer.files); });
-
-      // Ordner-Watcher starten
-      $('pickFolderBtn').addEventListener('click', async () => {
-        $('folderWarning').classList.add('hidden');
-        if (!window.showDirectoryPicker) {
-          $('folderWarning').textContent = 'Bitte Chrome oder Edge auf Mac/Windows nutzen – Safari/Firefox erlauben keinen direkten Ordner-Zugriff im Browser.';
-          $('folderWarning').classList.remove('hidden');
-          return;
-        }
-        try {
-          const mode = $('folderModeSelect').value;
-          const permMode = mode === 'keep' ? 'read' : 'readwrite';
-          const rootHandle = await window.showDirectoryPicker({ mode: permMode });
-          if (permMode === 'readwrite' && rootHandle.requestPermission) {
-            const p = await rootHandle.requestPermission({ mode: 'readwrite' });
-            if (p !== 'granted') throw new Error('Schreib-/Verschiebefreigabe für den Ordner wurde verweigert.');
-          }
-
-          let watchHandle = rootHandle;
-          let archiveHandle = null;
-          if (mode === 'archive') {
-            watchHandle = await rootHandle.getDirectoryHandle('Eingang', { create: true });
-            archiveHandle = await rootHandle.getDirectoryHandle('Archiv', { create: true });
-          }
-
-          state.activeFolderMode = mode;
-          state.rootDirHandle = rootHandle;
-          state.watchDirHandle = watchHandle;
-          state.archiveDirHandle = archiveHandle;
-          state.watching = true;
-          stabilityMap.clear();
-          keptUploaded.clear();
-          updateFolderUI();
-          clearInterval(watcherInterval);
-          watcherInterval = setInterval(scanWatchFolder, 1500);
-          scanWatchFolder();
-
-          showToast(
-            mode === 'archive'
-              ? `Aktiv: ${rootHandle.name}/Eingang → Archiv`
-              : `Ordner „${rootHandle.name}“ wird überwacht.`
-          );
-        } catch (err) {
-          if (err && err.name === 'AbortError') return;
-          $('folderWarning').textContent = err.message || 'Ordner konnte nicht geöffnet werden.';
-          $('folderWarning').classList.remove('hidden');
-        }
+      // Kiosk Launch & Copy Buttons
+      el('launchKioskSingleBtn').addEventListener('click', () => {
+        setView('kiosk', { kioskMode: 'single', silentBar: false });
+      });
+      el('launchKiosk3Btn').addEventListener('click', () => {
+        setView('kiosk', { kioskMode: 'gallery', kioskCount: 3, silentBar: false });
+      });
+      el('launchKiosk2Btn').addEventListener('click', () => {
+        setView('kiosk', { kioskMode: 'gallery', kioskCount: 2, silentBar: false });
       });
 
-      $('pauseFolderBtn').addEventListener('click', () => { state.watching = !state.watching; updateFolderUI(); });
-      $('stopFolderBtn').addEventListener('click', () => {
-        state.watching = false;
-        state.rootDirHandle = null;
-        state.watchDirHandle = null;
-        state.archiveDirHandle = null;
-        clearInterval(watcherInterval);
-        updateFolderUI();
+      el('copyObsSingleBtn').addEventListener('click', () => {
+        copyText(window.location.origin + '/?kiosk=single', 'OBS-Link kopiert');
+      });
+      el('copyBeamer3Btn').addEventListener('click', () => {
+        copyText(window.location.origin + '/?kiosk=3', 'Beamer-Link (3 Fotos) kopiert');
+      });
+      el('copyBeamer2Btn').addEventListener('click', () => {
+        copyText(window.location.origin + '/?kiosk=2', 'Beamer-Link (2 Fotos) kopiert');
       });
 
-      // Beide Kiosk-Modi starten & steuern
-      $('startKioskGalleryBtn').addEventListener('click', () => {
-        state.kioskMode = 'gallery';
-        setView('kiosk');
-      });
-      $('startKioskSingleBtn').addEventListener('click', () => {
-        if (!state.directLinksEnabled) {
-          showToast('Bitte zuerst persönliche Links aktivieren.', true);
-          return;
-        }
-        state.kioskMode = 'single';
-        setView('kiosk');
-      });
-      $('kioskExitBtn').addEventListener('click', () => {
-        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-        setView('settings');
-      });
-      $('kiosk2Btn').addEventListener('click', () => {
+      // Kiosk Floating Bar Controls
+      el('kioskView').addEventListener('mousemove', revealKioskBar);
+      el('kioskView').addEventListener('touchstart', revealKioskBar, { passive: true });
+      el('kioskBtn2').addEventListener('click', () => {
         state.kioskMode = 'gallery';
         state.kioskCount = 2;
-        updateKioskBarActiveState();
-        renderKiosk(true);
+        state.lastKioskSig = '';
+        updateKioskBarButtons();
+        renderKiosk();
       });
-      $('kiosk3Btn').addEventListener('click', () => {
+      el('kioskBtn3').addEventListener('click', () => {
         state.kioskMode = 'gallery';
         state.kioskCount = 3;
-        updateKioskBarActiveState();
-        renderKiosk(true);
+        state.lastKioskSig = '';
+        updateKioskBarButtons();
+        renderKiosk();
       });
-      $('kioskSingleBtn').addEventListener('click', () => {
-        if (!state.directLinksEnabled) return;
+      el('kioskBtnSingle').addEventListener('click', () => {
         state.kioskMode = 'single';
-        updateKioskBarActiveState();
-        renderKiosk(true);
+        state.lastKioskSig = '';
+        updateKioskBarButtons();
+        renderKiosk();
       });
-      $('kioskFsBtn').addEventListener('click', () => {
-        if (!document.fullscreenElement) $('kioskView').requestFullscreen().catch(() => {});
-        else document.exitFullscreen().catch(() => {});
+      el('kioskBtnFs').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
       });
-      $('kioskView').addEventListener('mousemove', revealKioskBar);
-      $('kioskView').addEventListener('touchstart', revealKioskBar);
+      el('kioskBtnExit').addEventListener('click', goHomeGallery);
 
-      // Lightbox
-      $('lbCloseBtn').addEventListener('click', closeLightbox);
-      $('lbPrevBtn').addEventListener('click', () => {
-        const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
-        if (i > 0) { state.lightboxId = list[i - 1].id; updateLightboxMeta(); }
+      // Lightbox Controls
+      el('lightboxCloseBtn').addEventListener('click', closeLightbox);
+      el('lightboxStage').addEventListener('click', (e) => {
+        if (e.target === el('lightboxStage')) closeLightbox();
       });
-      $('lbNextBtn').addEventListener('click', () => {
-        const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
-        if (i >= 0 && i < list.length - 1) { state.lightboxId = list[i + 1].id; updateLightboxMeta(); }
+      el('lightboxSaveBtn').addEventListener('click', () => {
+        const p = state.photos.find((item) => item.id === state.lightboxPhotoId);
+        if (p) savePhotoLossless(p, el('lightboxSaveBtn'));
       });
-      $('lbCopyLinkBtn').addEventListener('click', () => {
-        if (state.lightboxId) copyDirectLink(state.lightboxId);
+      el('lightboxDownloadBtn').addEventListener('click', () => {
+        const p = state.photos.find((item) => item.id === state.lightboxPhotoId);
+        if (p) triggerDirectDownload(p);
       });
-      $('lbSaveBtn').addEventListener('click', () => {
-        const p = activePhotos().find((x) => x.id === state.lightboxId);
-        if (p) savePhoto(p, false);
-      });
-      $('lbDownloadBtn').addEventListener('click', () => {
-        const p = activePhotos().find((x) => x.id === state.lightboxId);
-        if (p) savePhoto(p, true);
+      el('lightboxCopyBtn').addEventListener('click', () => {
+        const p = state.photos.find((item) => item.id === state.lightboxPhotoId);
+        if (p) copyText(personalPhotoUrl(p.id), 'Foto-Link kopiert');
       });
 
-      window.addEventListener('keydown', (e) => {
-        if (state.lightboxId) {
-          if (e.key === 'Escape') closeLightbox();
-          if (e.key === 'ArrowLeft') $('lbPrevBtn').click();
-          if (e.key === 'ArrowRight') $('lbNextBtn').click();
-        } else if (state.view === 'kiosk') {
-          if (e.key === 'Escape' && !document.fullscreenElement) setView('settings');
-          if (e.key === '1' && state.directLinksEnabled) $('kioskSingleBtn').click();
-          if (e.key === '2') $('kiosk2Btn').click();
-          if (e.key === '3') $('kiosk3Btn').click();
-          if (e.key.toLowerCase() === 'f') $('kioskFsBtn').click();
+      // Keyboard Shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (state.lightboxPhotoId && e.key === 'Escape') {
+          closeLightbox();
+          return;
+        }
+        if (state.view === 'kiosk') {
+          if (e.key === '2') {
+            state.kioskMode = 'gallery';
+            state.kioskCount = 2;
+            state.lastKioskSig = '';
+            updateKioskBarButtons();
+            renderKiosk();
+          } else if (e.key === '3') {
+            state.kioskMode = 'gallery';
+            state.kioskCount = 3;
+            state.lastKioskSig = '';
+            updateKioskBarButtons();
+            renderKiosk();
+          } else if (e.key.toLowerCase() === 'f') {
+            el('kioskBtnFs').click();
+          } else if (e.key === 'Escape') {
+            goHomeGallery();
+          }
         }
       });
 
-      fetchAuthStatus();
-      fetchPhotos();
-      setInterval(() => { if (document.visibilityState === 'visible') fetchPhotos(); }, 2000);
+      // 1-Sekunden-Tick für flüssige Countdowns ohne Bild-Flackern
       setInterval(() => {
-        const before = state.photos.length;
-        state.photos = activePhotos();
-        if (state.photos.length !== before) renderAll();
-        else updateCountdowns();
+        if (state.view === 'gallery') updateGalleryCountdowns();
+        else if (state.view === 'direct') updateDirectCountdown();
+        else if (state.view === 'settings' && state.token) updateAdminCountdowns();
+        else if (state.view === 'kiosk' && state.kioskMode === 'single') updateKioskCountdown();
+        if (state.lightboxPhotoId) updateLightboxCountdown();
       }, 1000);
+
+      // ---------- Init & Direkt-URL-Start ----------
+      (async function init() {
+        const params = new URLSearchParams(window.location.search);
+        const kioskParam = (params.get('kiosk') || '').toLowerCase();
+        const fotoParam = params.get('foto');
+
+        if (kioskParam === 'single' || kioskParam === 'qr') {
+          state.kioskDirectBoot = true;
+          setView('kiosk', { kioskMode: 'single', silentBar: true });
+        } else if (kioskParam === '2') {
+          state.kioskDirectBoot = true;
+          setView('kiosk', { kioskMode: 'gallery', kioskCount: 2, silentBar: true });
+        } else if (kioskParam === '3' || kioskParam === '1') {
+          state.kioskDirectBoot = true;
+          setView('kiosk', { kioskMode: 'gallery', kioskCount: 3, silentBar: true });
+        } else if (fotoParam) {
+          state.directPhotoId = fotoParam;
+          setView('direct');
+        } else {
+          setView('gallery');
+        }
+
+        await fetchPhotos();
+      })();
     })();
   </script>
 </body>
