@@ -1,6 +1,6 @@
 const PHOTO_TTL_MS = 5 * 60 * 1000; // Exakt 5 Minuten
 const MAX_ACTIVE_PHOTOS = 30;       // Maximal 30 Fotos (älteste werden ersetzt)
-const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 24 * 1024 * 1024;
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 const json = (body, status = 200) =>
