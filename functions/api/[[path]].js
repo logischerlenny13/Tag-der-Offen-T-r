@@ -93,22 +93,22 @@ async function verifyPin(env, candidate) {
 async function purgeExpired(env, now) {
   const expired = await env.DB.prepare('SELECT id, r2_key FROM photos WHERE expires_at <= ?').bind(now).all();
   if (expired.results.length === 0) return;
-  await env.PHOTOS_BUCKET.delete(expired.results.map((r) => r.r2_key));
+  await Promise.all(expired.results.map((r) => env.PHOTOS_KV.delete(r.r2_key)));
   await env.DB.prepare('DELETE FROM photos WHERE expires_at <= ?').bind(now).run();
 }
 
 async function enforceMax30(env) {
   const overflow = await env.DB.prepare('SELECT id, r2_key FROM photos ORDER BY created_at DESC LIMIT -1 OFFSET ?').bind(MAX_ACTIVE_PHOTOS).all();
   if (overflow.results.length === 0) return;
-  await env.PHOTOS_BUCKET.delete(overflow.results.map((r) => r.r2_key));
+  await Promise.all(overflow.results.map((r) => env.PHOTOS_KV.delete(r.r2_key)));
   for (const row of overflow.results) {
     await env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(row.id).run();
   }
 }
 
 export async function onRequest({ request, env }) {
-  if (!env.DB || !env.PHOTOS_BUCKET) {
-    return json({ error: 'Bitte DB (D1) und PHOTOS_BUCKET (R2) in Cloudflare Pages -> Settings -> Bindings verknüpfen.' }, 500);
+  if (!env.DB || !env.PHOTOS_KV) {
+    return json({ error: 'Bitte DB (D1) und PHOTOS_KV (KV-Namespace) in Cloudflare Pages -> Einstellungen -> Bindungen verknüpfen.' }, 500);
   }
   const url = new URL(request.url);
   const sub = url.pathname.replace(/^\/api\/?/, '');
@@ -167,7 +167,9 @@ export async function onRequest({ request, env }) {
     const file = fd && fd.get('photo');
     if (!file || typeof file === 'string') return json({ error: 'Bitte eine Bilddatei auswählen.' }, 400);
     if (file.size === 0 || file.size > MAX_FILE_SIZE_BYTES) return json({ error: 'Maximal 15 MB pro Foto.' }, 413);
-    const bytes = new Uint8Array(await file.arrayBuffer());
+
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
     const mime = detectMime(bytes);
     if (!mime) return json({ error: 'Nur JPEG, PNG oder WebP erlaubt.' }, 400);
 
@@ -175,12 +177,12 @@ export async function onRequest({ request, env }) {
     const createdAt = Date.now();
     const expiresAt = createdAt + PHOTO_TTL_MS;
     const fileName = fileNameFor(mime, createdAt);
-    const r2Key = 'live/' + id;
+    const kvKey = 'live:' + id;
 
-    await env.PHOTOS_BUCKET.put(r2Key, bytes, { httpMetadata: { contentType: mime } });
+    await env.PHOTOS_KV.put(kvKey, arrayBuffer, { expirationTtl: 300 });
     await env.DB.prepare(
       'INSERT INTO photos (id, r2_key, file_name, mime_type, size_bytes, width, height, created_at, expires_at) VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, ?)'
-    ).bind(id, r2Key, fileName, mime, bytes.length, createdAt, expiresAt).run();
+    ).bind(id, kvKey, fileName, mime, bytes.length, createdAt, expiresAt).run();
     await enforceMax30(env);
 
     return json({ serverNow: createdAt, photo: { id, fileName, mimeType: mime, sizeBytes: bytes.length, width: null, height: null, createdAt, expiresAt, remainingMs: PHOTO_TTL_MS } }, 201);
@@ -191,14 +193,14 @@ export async function onRequest({ request, env }) {
     const row = await env.DB.prepare('SELECT * FROM photos WHERE id = ?').bind(fileMatch[1]).first();
     if (!row) return json({ error: 'Foto wurde bereits gelöscht.' }, 404);
     if (row.expires_at <= now) {
-      await env.PHOTOS_BUCKET.delete(row.r2_key);
+      await env.PHOTOS_KV.delete(row.r2_key);
       await env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(row.id).run();
       return json({ error: 'Foto ist abgelaufen.' }, 404);
     }
-    const obj = await env.PHOTOS_BUCKET.get(row.r2_key);
-    if (!obj) return json({ error: 'Datei nicht mehr vorhanden.' }, 404);
+    const stream = await env.PHOTOS_KV.get(row.r2_key, { type: 'stream' });
+    if (!stream) return json({ error: 'Datei nicht mehr vorhanden.' }, 404);
     const disp = url.searchParams.get('download') === '1' ? 'attachment' : 'inline';
-    return new Response(obj.body, {
+    return new Response(stream, {
       headers: {
         'Content-Type': row.mime_type,
         'Content-Length': String(row.size_bytes),
@@ -214,7 +216,7 @@ export async function onRequest({ request, env }) {
     if (!(await isValidSession(env, getToken(request)))) return json({ error: 'Bitte mit Team-PIN anmelden.' }, 401);
     const row = await env.DB.prepare('SELECT id, r2_key FROM photos WHERE id = ?').bind(delMatch[1]).first();
     if (!row) return json({ error: 'Nicht gefunden.' }, 404);
-    await env.PHOTOS_BUCKET.delete(row.r2_key);
+    await env.PHOTOS_KV.delete(row.r2_key);
     await env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(row.id).run();
     return json({ ok: true });
   }
