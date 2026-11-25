@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Tag der offenen Tür — Live-Fotogalerie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --border: #E4E4E7;
+      --text: #111111;
+      --muted: #52525B;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --warn: #B45309;
+      --danger: #B91C1C;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body { display: flex; flex-direction: column; min-height: 100dvh; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+    .serif { font-family: "Fraunces", Georgia, serif; }
+    .hidden { display: none !important; }
+
+    /* Topbar */
+    header {
+      position: sticky; top: 0; z-index: 30;
+      border-bottom: 1px solid rgba(228,228,231,0.9);
+      background: rgba(250,250,250,0.92);
+      backdrop-filter: blur(10px);
+    }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto; height: 64px;
+      padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
+    .brand:hover { color: var(--accent); }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 40px; padding: 8px 16px; border-radius: 9px;
+      font-size: 14px; font-weight: 500; white-space: nowrap; transition: background .15s, border-color .15s, color .15s;
+    }
+    .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #F4F4F5; border-color: #D4D4D8; }
+    .btn-dark { background: var(--text); color: #FFF; }
+    .btn-dark:hover { background: var(--accent); }
+    .btn-primary { background: var(--accent); color: #FFF; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-danger { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+    .btn-danger:hover { border-color: #FECACA; background: #FEF2F2; color: var(--danger); }
+    .btn-ghost { color: var(--muted); padding: 8px 10px; }
+    .btn-ghost:hover { color: var(--text); }
+
+    /* Main Layout */
+    main { flex: 1; width: 100%; max-width: 1280px; margin: 0 auto; padding: 40px 20px 88px; }
+    .page-head {
+      display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;
+      padding-bottom: 28px;
+    }
+    h1 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; letter-spacing: -0.025em; }
+    .submeta { font-size: 12px; color: var(--muted); }
+
+    /* Gallery Grid */
+    .grid {
+      display: grid; gap: 24px;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .thumb-wrap {
+      position: relative; aspect-ratio: 4 / 3; background: #F4F4F5; overflow: hidden; cursor: zoom-in;
+    }
+    .thumb-wrap img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform .25s ease;
+    }
+    .card:hover .thumb-wrap img { transform: scale(1.02); }
+    .progress-track {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,0.1);
+    }
+    .progress-fill {
+      height: 100%; background: var(--accent); transform-origin: left center; transition: background .2s;
+    }
+    .progress-fill.warn { background: var(--warn); }
+    .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .card-meta {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 12px; color: var(--muted);
+    }
+    .card-meta .warn-text { color: var(--warn); font-weight: 600; }
+    .card-actions { display: flex; gap: 8px; }
+    .card-actions .btn-save { flex: 1; min-height: 42px; font-size: 13px; }
+    .card-actions .btn-icon { min-width: 42px; min-height: 42px; padding: 0 10px; font-size: 13px; }
+
+    /* Empty State */
+    .empty-box {
+      min-height: 52vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 48px 24px;
+    }
+    .empty-box h2 { font-size: 26px; font-weight: 400; margin-bottom: 10px; }
+    .empty-box p { max-width: 380px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+    /* Panel / Settings / Privacy */
+    .narrow { max-width: 780px; margin: 0 auto; }
+    .pin-card {
+      max-width: 420px; margin: 32px auto 0; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+    }
+    .pin-card h1 { font-size: 22px; margin-bottom: 8px; }
+    .pin-card p { font-size: 14px; line-height: 1.6; color: var(--muted); margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: #3F3F46; margin-bottom: 6px; }
+    .field input {
+      width: 100%; height: 42px; padding: 0 12px; border-radius: 9px;
+      border: 1px solid #D4D4D8; background: #FFF; font-size: 14px;
+    }
+    .field input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+    .err-msg { color: var(--danger); font-size: 12px; font-weight: 500; margin-bottom: 12px; }
+    .warn-box {
+      border: 1px solid #FDE68A; background: #FFFBEB; color: #92400E;
+      border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.5; margin-top: 14px;
+    }
+
+    .tabs {
+      display: inline-flex; flex-wrap: wrap; gap: 4px; background: #E4E4E7; padding: 4px;
+      border-radius: 12px; margin-bottom: 24px;
+    }
+    .tab-btn {
+      min-height: 36px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted);
+    }
+    .tab-btn.active { background: #FFF; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+    .box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; margin-bottom: 24px;
+    }
+    .box h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .box p { font-size: 13px; line-height: 1.6; color: var(--muted); }
+    .dropzone {
+      border: 1px dashed #D4D4D8; border-radius: 16px; background: #FFF;
+      padding: 36px 20px; text-align: center; transition: border-color .15s, background .15s;
+      margin-bottom: 24px;
+    }
+    .dropzone.drag { border-color: var(--accent); background: rgba(37,99,235,0.04); }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
+    .checkbox-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: #3F3F46; cursor: pointer;
+    }
+    .list {
+      margin-top: 16px; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: #FFF;
+    }
+    .list-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-thumb { width: 56px; height: 42px; border-radius: 6px; object-fit: cover; background: #F4F4F5; flex-shrink: 0; }
+    .list-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Footer */
+    footer { border-top: 1px solid rgba(228,228,231,0.8); background: var(--bg); }
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto; padding: 24px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      font-size: 12px; color: var(--muted);
+    }
+    .footer-link { font-weight: 500; color: #3F3F46; }
+    .footer-link:hover { color: var(--text); text-decoration: underline; }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 60; background: rgba(8,8,10,0.96); color: #FFF;
+      display: flex; flex-direction: column;
+    }
+    .lb-top, .lb-bottom {
+      padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .lb-bottom { border-top: 1px solid rgba(255,255,255,0.1); }
+    .lb-stage {
+      flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+      position: relative; padding: 8px 48px;
+    }
+    .lb-stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+    .lb-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 44px; height: 44px; border-radius: 999px; background: rgba(255,255,255,0.12); color: #FFF; font-size: 20px;
+    }
+    .lb-nav:hover { background: rgba(255,255,255,0.25); }
+    .lb-prev { left: 12px; }
+    .lb-next { right: 12px; }
+
+    /* Purist Dark Beamer Kiosk */
+    .kiosk {
+      position: fixed; inset: 0; z-index: 50; background: #050505; color: #FFF;
+      height: 100dvh; width: 100vw; padding: 24px; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .kiosk.idle { cursor: none; }
+    .kiosk-stage { flex: 1; min-height: 0; width: 100%; display: grid; gap: 20px; }
+    .kiosk-stage.count-1 { grid-template-columns: 1fr; place-items: center; }
+    .kiosk-stage.count-2 { grid-template-columns: 1fr 1fr; }
+    .kiosk-stage.count-3 { grid-template-columns: 7fr 5fr; }
+    .kiosk-side { display: grid; grid-template-rows: 1fr 1fr; gap: 20px; min-height: 0; }
+    .kiosk-frame {
+      width: 100%; height: 100%; min-height: 0; overflow: hidden;
+      border-radius: 16px; border: 1px solid #27272A; background: #0D0D10;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kiosk-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .kiosk-stage.count-1 .kiosk-frame { max-width: 92vw; max-height: 90dvh; }
+    .kiosk-stage.count-1 .kiosk-frame img { object-fit: contain; }
+    .kiosk-empty {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    }
+    .kiosk-empty h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 400; color: #E4E4E7; }
+    .kiosk-empty p { margin-top: 12px; font-size: 14px; color: #71717A; }
+    .kiosk-bar {
+      position: fixed; right: 20px; bottom: 20px; z-index: 55;
+      display: flex; align-items: center; gap: 8px; padding: 6px;
+      border-radius: 12px; background: rgba(17,17,19,0.92); border: 1px solid #27272A;
+      transition: opacity .25s;
+    }
+    .kiosk-bar.hide { opacity: 0; pointer-events: none; }
+    .kiosk-bar button {
+      min-height: 34px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 500; color: #D4D4D8;
+    }
+    .kiosk-bar button.active { background: #FFF; color: #111; }
+    .kiosk-bar button:hover:not(.active) { background: #27272A; color: #FFF; }
+    @media (max-width: 900px) {
+      .kiosk-stage.count-2, .kiosk-stage.count-3 { grid-template-columns: 1fr; }
+      .kiosk-side { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 80;
+      background: #111111; color: #FFF; padding: 10px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; max-width: 92vw; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+    .toast.err { background: var(--danger); }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header id="appHeader">
+    <div class="header-inner">
+      <button type="button" class="brand" id="brandBtn">Tag der offenen Tür</button>
+      <div class="header-actions">
+        <button type="button" class="btn btn-ghost hidden" id="backGalleryBtn">← Zur Galerie</button>
+        <button type="button" class="btn btn-outline" id="settingsBtn">⚙ Einstellungen</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- View 1: Startseite (Nur Fotos zum Anschauen & Herunterladen) -->
+  <main id="viewGallery">
+    <div class="page-head">
+      <h1>Aktuelle Fotos</h1>
+      <span class="submeta mono" id="galleryStats">0 / 30 aktiv · 5 Min. verfügbar</span>
+    </div>
+    <div id="galleryEmpty" class="empty-box hidden">
+      <h2 class="serif">Gerade sind keine Fotos aktiv</h2>
+      <p>Neue Aufnahmen erscheinen hier automatisch und bleiben jeweils 5 Minuten in voller Qualität zum Herunterladen verfügbar.</p>
+    </div>
+    <div id="galleryGrid" class="grid"></div>
+  </main>
+
+  <!-- View 2: Einstellungen (PIN-geschützt) -->
+  <main id="viewSettings" class="hidden">
+    <!-- PIN Login / Erstsetup -->
+    <div id="pinGate" class="pin-card">
+      <h1 id="pinTitle">Einstellungen (Team-PIN)</h1>
+      <p id="pinDesc">Melde dich mit der Team-PIN an, um Fotos hochzuladen, den Kamera-Ordner zu verbinden oder den Beamer-Kiosk zu starten.</p>
+      <form id="pinForm">
+        <div class="field">
+          <label for="pinInput" id="pinLabel">Team-PIN</label>
+          <input id="pinInput" type="password" autocomplete="current-password" required placeholder="Team-PIN eingeben" />
+        </div>
+        <div class="field hidden" id="pinConfirmWrap">
+          <label for="pinConfirmInput">Team-PIN bestätigen</label>
+          <input id="pinConfirmInput" type="password" autocomplete="new-password" placeholder="PIN wiederholen" />
+        </div>
+        <div id="pinError" class="err-msg hidden"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%" id="pinSubmitBtn">Anmelden</button>
+      </form>
+    </div>
+
+    <!-- Eingeloggter Team-Bereich -->
+    <div id="settingsHub" class="narrow hidden">
+      <div class="page-head" style="border-bottom:1px solid var(--border); margin-bottom:24px;">
+        <div>
+          <h1>Einstellungen</h1>
+          <p class="submeta" style="margin-top:4px;">Team-Bereich für Foto-Upload, Ordner-Automatik und Beamer-Kiosk.</p>
+        </div>
+        <button type="button" class="btn btn-outline" id="logoutBtn">Abmelden</button>
+      </div>
+
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="upload">Upload &amp; Ordner</button>
+        <button type="button" class="tab-btn" data-tab="kiosk">Beamer-Kiosk</button>
+      </div>
+
+      <!-- Tab: Upload & Ordner -->
+      <div id="tabUpload">
+        <!-- Auto Ordner Watcher -->
+        <section class="box">
+          <h2>Automatischer Ordner-Upload (Mac &amp; Windows)</h2>
+          <p>Wähle in Chrome oder Edge den Ausgabeordner eurer Kamera/Fotobox aus. Neue Fotos werden automatisch in voller Qualität hochgeladen und nach bestätigtem Upload sofort aus dem Ordner gelöscht.</p>
+          <label class="checkbox-row">
+            <input type="checkbox" id="deleteAfterCheck" checked />
+            <span>Lokale Datei nach erfolgreichem Upload automatisch löschen</span>
+          </label>
+          <div class="row-actions">
+            <button type="button" class="btn btn-dark" id="pickFolderBtn">Kamera-Ordner auswählen</button>
+            <button type="button" class="btn btn-outline hidden" id="pauseFolderBtn">Pausieren</button>
+            <button type="button" class="btn btn-danger hidden" id="stopFolderBtn">Trennen</button>
+            <span class="submeta mono" id="folderStatus"></span>
+          </div>
+          <div id="folderWarning" class="warn-box hidden"></div>
+          <div id="folderLog" class="list hidden"></div>
+        </section>
+
+        <!-- Manueller Upload -->
+        <section id="dropzone" class="dropzone">
+          <h2 style="font-size:16px; margin-bottom:6px;">Einzelne Fotos manuell hochladen</h2>
+          <p class="submeta">JPEG, PNG oder WebP · bis 15 MB · volle Originalauflösung · 5 Min. sichtbar</p>
+          <div class="row-actions" style="justify-content:center;">
+            <button type="button" class="btn btn-primary" id="selectFilesBtn">Dateien auswählen</button>
+            <button type="button" class="btn btn-outline" id="openCameraBtn">Kamera öffnen</button>
+          </div>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple class="hidden" />
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
+          <div id="uploadLog" class="list hidden" style="text-align:left;"></div>
+        </section>
+
+        <!-- Aktive Fotos verwalten -->
+        <section>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+            <h2 style="font-size:16px;">Aktive Aufnahmen verwalten</h2>
+            <span class="submeta mono" id="manageStats">0 / 30 belegt</span>
+          </div>
+          <div id="manageList" class="list"></div>
+        </section>
+      </div>
+
+      <!-- Tab: Beamer Kiosk -->
+      <div id="tabKiosk" class="hidden">
+        <section class="box">
+          <h2>Beamer-Kiosk-Modus (Dunkel)</h2>
+          <p style="margin-bottom:14px;">Zeigt im Vollbild auf tiefschwarzem Hintergrund ausschließlich die letzten 2 oder 3 aktiven Fotos sauber geordnet — ohne Texte, Menüs oder Countdowns. Neue Fotos rücken automatisch nach.</p>
+          <p class="submeta" style="margin-bottom:20px;">Tasten im Kiosk: <span class="mono">2</span> oder <span class="mono">3</span> für Anzahl · <span class="mono">F</span> Vollbild · <span class="mono">ESC</span> Beenden</p>
+          <button type="button" class="btn btn-dark" id="startKioskBtn">Beamer-Kiosk jetzt starten</button>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- View 3: Datenschutz -->
+  <main id="viewPrivacy" class="hidden">
+    <div class="narrow">
+      <div class="page-head" style="border-bottom:1px solid var(--border); margin-bottom:24px;">
+        <h1>Datenschutz beim Tag der offenen Tür</h1>
+      </div>
+      <div class="box">
+        <h2>01. Automatische Löschung nach exakt 5 Minuten</h2>
+        <p>Jede Aufnahme bleibt genau 300 Sekunden sichtbar und wird danach serverseitig vollständig aus dem Speicher und der Datenbank gelöscht.</p>
+      </div>
+      <div class="box">
+        <h2>02. Begrenzung auf maximal 30 aktive Fotos</h2>
+        <p>Es werden nie mehr als 30 Fotos gleichzeitig vorgehalten. Ab dem 31. Foto werden die ältesten Aufnahmen automatisch gelöscht.</p>
+      </div>
+      <div class="box">
+        <h2>03. Verlustfrei für Apple Fotos &amp; Android ohne Tracking</h2>
+        <p>Es gibt kein Benutzerkonto, kein Tracking und kein Browser-Caching. Über „In Fotos sichern“ öffnet sich auf dem iPhone direkt das Teilen-Menü mit „Bild sichern“ für Apple Fotos; auf Android landet das Original direkt in der Galerie.</p>
+      </div>
+      <button type="button" class="btn btn-dark" id="privacyBackBtn">Zurück zur Galerie</button>
+    </div>
+  </main>
+
+  <!-- Footer ganz unten -->
+  <footer id="appFooter">
+    <div class="footer-inner">
+      <span>Automatische Löschung nach 5 Minuten</span>
+      <button type="button" class="footer-link" id="privacyLink">Datenschutz</button>
+    </div>
+  </footer>
+
+  <!-- Vollbild-Lightbox -->
+  <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true">
+    <div class="lb-top">
+      <span class="submeta mono" style="color:#D4D4D8;" id="lbMeta"></span>
+      <button type="button" class="btn" style="background:rgba(255,255,255,0.12); color:#FFF;" id="lbCloseBtn">✕</button>
+    </div>
+    <div class="lb-stage">
+      <button type="button" class="lb-nav lb-prev" id="lbPrevBtn">‹</button>
+      <img id="lbImg" alt="Foto in voller Auflösung" />
+      <button type="button" class="lb-nav lb-next" id="lbNextBtn">›</button>
+    </div>
+    <div class="lb-bottom">
+      <span class="submeta" style="color:#A1A1AA;" id="lbTip">Originaldatei in voller Qualität.</span>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-primary" id="lbSaveBtn">In Fotos sichern</button>
+        <button type="button" class="btn" style="background:rgba(255,255,255,0.1); color:#FFF;" id="lbDownloadBtn">Original laden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Puristischer Beamer-Kiosk (Dunkel, nur letzte 2 oder 3 Fotos) -->
+  <div id="kioskView" class="kiosk hidden">
+    <div id="kioskEmpty" class="kiosk-empty hidden">
+      <h2 class="serif">Tag der offenen Tür</h2>
+      <p>Neue Aufnahmen erscheinen hier automatisch</p>
+    </div>
+    <div id="kioskStage" class="kiosk-stage"></div>
+    <div id="kioskBar" class="kiosk-bar">
+      <button type="button" id="kiosk2Btn">2 Fotos</button>
+      <button type="button" id="kiosk3Btn" class="active">3 Fotos</button>
+      <button type="button" id="kioskFsBtn">Vollbild</button>
+      <button type="button" id="kioskExitBtn">Beenden</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    (() => {
+      const state = {
+        view: 'gallery',
+        photos: [],
+        maxPhotos: 30,
+        ttlMs: 300000,
+        clockOffset: 0,
+        teamToken: null,
+        pinConfigured: true,
+        lightboxId: null,
+        kioskCount: 3,
+        lastGalleryKey: '',
+        lastKioskKey: '',
+        lastManageKey: '',
+        dirHandle: null,
+        watching: false,
+        uploadedViaWatcher: 0,
+      };
+
+      const stabilityMap = new Map();
+      const inFlight = new Set();
+      const keptUploaded = new Set();
+      let kioskIdleTimer = null;
+      let toastTimer = null;
+      let watcherInterval = null;
+
+      const $ = (id) => document.getElementById(id);
+      const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isMobile = () => isIOS() || /Android/i.test(navigator.userAgent);
+      const serverNow = () => Date.now() + state.clockOffset;
+
+      function fmtCountdown(ms) {
+        const s = Math.max(0, Math.ceil(ms / 1000));
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+      }
+      function fmtTime(ts) {
+        return new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(new Date(ts));
+      }
+      function fmtSize(b) {
+        return b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1).replace('.', ',') + ' MB';
+      }
+      function photoUrl(id, dl = false) {
+        return '/api/photos/' + encodeURIComponent(id) + '/file' + (dl ? '?download=1' : '');
+      }
+
+      function showToast(msg, isErr = false) {
+        const el = $('toast');
+        el.textContent = msg;
+        el.className = 'toast' + (isErr ? ' err' : '');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.add('hidden'), 3600);
+      }
+
+      function setView(next) {
+        if (next === 'kiosk' && !state.teamToken) next = 'settings';
+        state.view = next;
+        const isKiosk = next === 'kiosk';
+        $('appHeader').classList.toggle('hidden', isKiosk);
+        $('appFooter').classList.toggle('hidden', isKiosk);
+        $('viewGallery').classList.toggle('hidden', next !== 'gallery');
+        $('viewSettings').classList.toggle('hidden', next !== 'settings');
+        $('viewPrivacy').classList.toggle('hidden', next !== 'privacy');
+        $('kioskView').classList.toggle('hidden', !isKiosk);
+        $('backGalleryBtn').classList.toggle('hidden', next === 'gallery');
+        $('settingsBtn').classList.toggle('hidden', next === 'settings');
+        $('settingsBtn').className = state.teamToken ? 'btn btn-dark' : 'btn btn-outline';
+        if (isKiosk) {
+          revealKioskBar();
+          renderKiosk(true);
+        } else {
+          window.scrollTo(0, 0);
+        }
+        if (next === 'settings') renderSettingsAuth();
+      }
+
+      // Lossless iOS / Android Save
+      async function savePhoto(photo, forceDirect = false) {
+        try {
+          const res = await fetch(photoUrl(photo.id, forceDirect), { cache: 'no-store' });
+          if (!res.ok) throw new Error('Foto ist bereits abgelaufen und wurde gelöscht.');
+          const blob = await res.blob();
+          const file = new File([blob], photo.fileName, { type: photo.mimeType || blob.type || 'image/jpeg' });
+          if (!forceDirect && isMobile() && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'Tag der offenen Tür' });
+              showToast('Im Teilen-Menü „Bild sichern“ für Apple Fotos wählen.');
+              return;
+            } catch (e) {
+              if (e && e.name === 'AbortError') return;
+            }
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = photo.fileName; a.rel = 'noopener';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 15000);
+          showToast('Originalfoto in voller Qualität gespeichert.');
+        } catch (err) {
+          showToast(err.message || 'Download fehlgeschlagen.', true);
+        }
+      }
+
+      // API Sync
+      async function fetchAuthStatus() {
+        try {
+          const headers = state.teamToken ? { Authorization: 'Bearer ' + state.teamToken } : {};
+          const res = await fetch('/api/auth/status', { headers, cache: 'no-store' });
+          if (!res.ok) return;
+          const data = await res.json();
+          state.pinConfigured = Boolean(data.configured);
+          if (state.teamToken && !data.authenticated) state.teamToken = null;
+          renderSettingsAuth();
+        } catch {}
+      }
+
+      async function fetchPhotos() {
+        try {
+          const res = await fetch('/api/photos', { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (typeof data.serverNow === 'number') state.clockOffset = data.serverNow - Date.now();
+          if (typeof data.ttlMs === 'number') state.ttlMs = data.ttlMs;
+          if (typeof data.maxPhotos === 'number') state.maxPhotos = data.maxPhotos;
+          state.photos = (data.photos || []).sort((a, b) => b.createdAt - a.createdAt);
+          renderAll();
+        } catch {}
+      }
+
+      function activePhotos() {
+        const now = serverNow();
+        return state.photos.filter((p) => p.expiresAt > now);
+      }
+
+      function renderGallery() {
+        const list = activePhotos();
+        $('galleryStats').textContent = list.length + ' / ' + state.maxPhotos + ' aktiv · 5 Min. verfügbar';
+        $('galleryEmpty').classList.toggle('hidden', list.length > 0);
+        const key = list.map((p) => p.id).join(',') + '|' + Boolean(state.teamToken);
+        if (key === state.lastGalleryKey) { updateCountdowns(); return; }
+        state.lastGalleryKey = key;
+
+        const grid = $('galleryGrid');
+        grid.textContent = '';
+        for (const photo of list) {
+          const card = document.createElement('article');
+          card.className = 'card';
+
+          const wrap = document.createElement('div');
+          wrap.className = 'thumb-wrap';
+          wrap.addEventListener('click', () => openLightbox(photo.id));
+          const img = document.createElement('img');
+          img.src = photoUrl(photo.id);
+          img.alt = 'Foto vom ' + fmtTime(photo.createdAt) + ' Uhr';
+          img.loading = 'lazy';
+          wrap.appendChild(img);
+
+          const track = document.createElement('div');
+          track.className = 'progress-track';
+          const fill = document.createElement('div');
+          fill.className = 'progress-fill';
+          fill.dataset.barExpires = String(photo.expiresAt);
+          track.appendChild(fill);
+          wrap.appendChild(track);
+          card.appendChild(wrap);
+
+          const body = document.createElement('div');
+          body.className = 'card-body';
+
+          const meta = document.createElement('div');
+          meta.className = 'card-meta';
+          const left = document.createElement('span');
+          left.textContent = fmtTime(photo.createdAt) + ' Uhr · ';
+          const cd = document.createElement('span');
+          cd.className = 'mono';
+          cd.dataset.cdExpires = String(photo.expiresAt);
+          left.appendChild(cd);
+          const warn = document.createElement('span');
+          warn.className = 'warn-text hidden';
+          warn.dataset.warnExpires = String(photo.expiresAt);
+          warn.textContent = 'Gleich gelöscht';
+          meta.append(left, warn);
+          body.appendChild(meta);
+
+          const actions = document.createElement('div');
+          actions.className = 'card-actions';
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'btn btn-dark btn-save';
+          saveBtn.textContent = 'In Fotos sichern';
+          saveBtn.addEventListener('click', () => savePhoto(photo, false));
+          actions.appendChild(saveBtn);
+
+          if (isMobile()) {
+            const dlBtn = document.createElement('button');
+            dlBtn.type = 'button';
+            dlBtn.className = 'btn btn-outline btn-icon';
+            dlBtn.title = 'Original direkt laden';
+            dlBtn.textContent = '↓';
+            dlBtn.addEventListener('click', () => savePhoto(photo, true));
+            actions.appendChild(dlBtn);
+          }
+
+          if (state.teamToken) {
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn btn-danger btn-icon';
+            delBtn.title = 'Sofort löschen';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', () => deletePhoto(photo.id));
+            actions.appendChild(delBtn);
+          }
+          body.appendChild(actions);
+          card.appendChild(body);
+          grid.appendChild(card);
+        }
+        updateCountdowns();
+      }
+
+      function renderManageList() {
+        if (!state.teamToken) return;
+        const list = activePhotos();
+        $('manageStats').textContent = list.length + ' / ' + state.maxPhotos + ' belegt';
+        const key = list.map((p) => p.id).join(',');
+        if (key === state.lastManageKey) return;
+        state.lastManageKey = key;
+
+        const box = $('manageList');
+        box.textContent = '';
+        if (list.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'list-item';
+          empty.style.color = '#71717A';
+          empty.textContent = 'Aktuell sind keine Fotos live.';
+          box.appendChild(empty);
+          return;
+        }
+        for (const p of list) {
+          const row = document.createElement('div');
+          row.className = 'list-item';
+          const left = document.createElement('div');
+          left.className = 'list-left';
+          const img = document.createElement('img');
+          img.className = 'list-thumb';
+          img.src = photoUrl(p.id);
+          const info = document.createElement('div');
+          const t = document.createElement('div');
+          t.style.fontWeight = '500';
+          t.textContent = fmtTime(p.createdAt) + ' Uhr · ' + fmtSize(p.sizeBytes);
+          const cd = document.createElement('div');
+          cd.className = 'submeta mono';
+          cd.dataset.cdExpires = String(p.expiresAt);
+          info.append(t, cd);
+          left.append(img, info);
+
+          const del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'btn btn-danger';
+          del.style.minHeight = '34px';
+          del.style.fontSize = '12px';
+          del.textContent = 'Sofort löschen';
+          del.addEventListener('click', () => deletePhoto(p.id));
+          row.append(left, del);
+          box.appendChild(row);
+        }
+        updateCountdowns();
+      }
+
+      function renderKiosk(force = false) {
+        if (state.view !== 'kiosk') return;
+        const shown = activePhotos().slice(0, state.kioskCount);
+        const key = state.kioskCount + ':' + shown.map((p) => p.id).join(',');
+        if (!force && key === state.lastKioskKey) return;
+        state.lastKioskKey = key;
+
+        const stage = $('kioskStage');
+        $('kioskEmpty').classList.toggle('hidden', shown.length > 0);
+        stage.classList.toggle('hidden', shown.length === 0);
+        stage.textContent = '';
+        if (shown.length === 0) return;
+
+        stage.className = 'kiosk-stage count-' + shown.length;
+        const makeFrame = (photo) => {
+          const f = document.createElement('div');
+          f.className = 'kiosk-frame';
+          const img = document.createElement('img');
+          img.src = photoUrl(photo.id);
+          img.alt = 'Live-Aufnahme';
+          f.appendChild(img);
+          return f;
+        };
+
+        if (shown.length <= 2) {
+          shown.forEach((p) => stage.appendChild(makeFrame(p)));
+        } else {
+          stage.appendChild(makeFrame(shown[0]));
+          const side = document.createElement('div');
+          side.className = 'kiosk-side';
+          side.appendChild(makeFrame(shown[1]));
+          side.appendChild(makeFrame(shown[2]));
+          stage.appendChild(side);
+        }
+      }
+
+      function updateCountdowns() {
+        const now = serverNow();
+        document.querySelectorAll('[data-cd-expires]').forEach((el) => {
+          const rem = Math.max(0, Number(el.dataset.cdExpires) - now);
+          el.textContent = 'Noch ' + fmtCountdown(rem);
+          el.style.color = rem <= 30000 ? '#B45309' : '';
+        });
+        document.querySelectorAll('[data-bar-expires]').forEach((el) => {
+          const rem = Math.max(0, Number(el.dataset.barExpires) - now);
+          el.style.transform = 'scaleX(' + Math.max(0, Math.min(1, rem / state.ttlMs)) + ')';
+          el.classList.toggle('warn', rem <= 30000);
+        });
+        document.querySelectorAll('[data-warn-expires]').forEach((el) => {
+          const rem = Math.max(0, Number(el.dataset.warnExpires) - now);
+          el.classList.toggle('hidden', rem > 30000);
+        });
+        if (state.lightboxId) updateLightboxMeta();
+      }
+
+      function renderAll() {
+        renderGallery();
+        renderManageList();
+        renderKiosk();
+        if (state.lightboxId && !activePhotos().some((p) => p.id === state.lightboxId)) closeLightbox();
+      }
+
+      // Lightbox
+      function openLightbox(id) {
+        state.lightboxId = id;
+        $('lightbox').classList.remove('hidden');
+        $('lbTip').textContent = isIOS()
+          ? 'iPhone/iPad: „In Fotos sichern“ tippen → im Menü „Bild sichern“ wählen.'
+          : 'Originaldatei ohne Komprimierung — direkt für deine Fotomediathek.';
+        updateLightboxMeta();
+      }
+      function closeLightbox() {
+        state.lightboxId = null;
+        $('lightbox').classList.add('hidden');
+      }
+      function updateLightboxMeta() {
+        const list = activePhotos();
+        const idx = list.findIndex((p) => p.id === state.lightboxId);
+        if (idx < 0) return closeLightbox();
+        const p = list[idx];
+        $('lbImg').src = photoUrl(p.id);
+        const dims = p.width && p.height ? ' · ' + p.width + '×' + p.height : '';
+        $('lbMeta').textContent = fmtTime(p.createdAt) + ' Uhr · Noch ' + fmtCountdown(p.expiresAt - serverNow()) + dims + ' · ' + fmtSize(p.sizeBytes);
+        $('lbPrevBtn').classList.toggle('hidden', idx <= 0);
+        $('lbNextBtn').classList.toggle('hidden', idx >= list.length - 1);
+      }
+
+      // Auth & Settings
+      function renderSettingsAuth() {
+        const authed = Boolean(state.teamToken);
+        $('pinGate').classList.toggle('hidden', authed);
+        $('settingsHub').classList.toggle('hidden', !authed);
+        if (!authed) {
+          const setup = !state.pinConfigured;
+          $('pinTitle').textContent = setup ? 'Team-PIN einmalig festlegen' : 'Einstellungen (Team-PIN)';
+          $('pinDesc').textContent = setup
+            ? 'Lege einmalig eine Team-PIN fest, um Upload, Ordner-Automatik und Beamer-Kiosk freizuschalten.'
+            : 'Melde dich mit der Team-PIN an, um Fotos hochzuladen, den Kamera-Ordner zu verbinden oder den Beamer-Kiosk zu starten.';
+          $('pinLabel').textContent = setup ? 'Neue Team-PIN (4–32 Zeichen)' : 'Team-PIN';
+          $('pinConfirmWrap').classList.toggle('hidden', !setup);
+          $('pinConfirmInput').required = setup;
+          $('pinSubmitBtn').textContent = setup ? 'PIN speichern & öffnen' : 'Anmelden';
+        } else {
+          renderManageList();
+        }
+      }
+
+      async function deletePhoto(id) {
+        if (!state.teamToken) return;
+        const res = await fetch('/api/photos/' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + state.teamToken },
+        });
+        if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); return; }
+        state.photos = state.photos.filter((p) => p.id !== id);
+        renderAll();
+        showToast('Foto sofort gelöscht.');
+      }
+
+      async function uploadSingleFile(file) {
+        if (!state.teamToken) throw new Error('Bitte zuerst anmelden.');
+        if (file.size > 15 * 1024 * 1024) throw new Error('Größer als 15 MB.');
+        const fd = new FormData();
+        fd.append('photo', file, file.name);
+        const res = await fetch('/api/photos', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + state.teamToken },
+          body: fd,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) { state.teamToken = null; renderSettingsAuth(); }
+        if (!res.ok || !data.photo) throw new Error(data.error || 'Upload fehlgeschlagen.');
+        if (!state.photos.some((p) => p.id === data.photo.id)) {
+          state.photos.unshift(data.photo);
+          state.photos.sort((a, b) => b.createdAt - a.createdAt);
+        }
+        renderAll();
+        return data.photo;
+      }
+
+      function addLog(containerId, name, detail, isErr = false) {
+        const box = $(containerId);
+        box.classList.remove('hidden');
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const l = document.createElement('span');
+        l.className = 'truncate';
+        l.textContent = name;
+        const r = document.createElement('span');
+        r.style.whiteSpace = 'nowrap';
+        r.style.color = isErr ? '#B91C1C' : '#52525B';
+        r.textContent = detail;
+        row.append(l, r);
+        box.prepend(row);
+        while (box.children.length > 6) box.lastChild.remove();
+      }
+
+      async function handleManualFiles(fileList) {
+        for (const file of Array.from(fileList)) {
+          try {
+            await uploadSingleFile(file);
+            addLog('uploadLog', file.name, 'Live für 5:00 Min.');
+          } catch (err) {
+            addLog('uploadLog', file.name, err.message, true);
+            showToast(err.message, true);
+          }
+        }
+      }
+
+      // Automatischer Ordner-Watcher (Mac & Windows in Chrome/Edge)
+      async function scanWatchFolder() {
+        if (!state.dirHandle || !state.watching || !state.teamToken) return;
+        const seen = new Set();
+        const delAfter = $('deleteAfterCheck').checked;
+        try {
+          for await (const [name, entry] of state.dirHandle.entries()) {
+            if (entry.kind !== 'file' || name.startsWith('.') || !/\.(jpe?g|png|webp)$/i.test(name)) continue;
+            seen.add(name);
+            if (inFlight.has(name)) continue;
+            const file = await entry.getFile().catch(() => null);
+            if (!file || file.size === 0) continue;
+            const sig = name + ':' + file.size + ':' + file.lastModified;
+            if (!delAfter && keptUploaded.has(sig)) continue;
+
+            const prev = stabilityMap.get(name);
+            if (!prev || prev.size !== file.size || prev.lm !== file.lastModified) {
+              stabilityMap.set(name, { size: file.size, lm: file.lastModified });
+              continue;
+            }
+
+            inFlight.add(name);
+            try {
+              await uploadSingleFile(file);
+              state.uploadedViaWatcher += 1;
+              stabilityMap.delete(name);
+              if (delAfter) {
+                await state.dirHandle.removeEntry(name);
+                addLog('folderLog', name, 'Hochgeladen & lokal gelöscht');
+              } else {
+                keptUploaded.add(sig);
+                addLog('folderLog', name, 'Hochgeladen (lokal behalten)');
+              }
+              updateFolderUI();
+            } catch (err) {
+              addLog('folderLog', name, err.message + ' (bleibt erhalten)', true);
+            } finally {
+              inFlight.delete(name);
+            }
+          }
+          for (const k of stabilityMap.keys()) { if (!seen.has(k)) stabilityMap.delete(k); }
+        } catch (err) {
+          state.watching = false;
+          $('folderWarning').textContent = 'Ordner-Zugriff unterbrochen: ' + err.message;
+          $('folderWarning').classList.remove('hidden');
+          updateFolderUI();
+        }
+      }
+
+      function updateFolderUI() {
+        const connected = Boolean(state.dirHandle);
+        $('pickFolderBtn').classList.toggle('hidden', connected);
+        $('pauseFolderBtn').classList.toggle('hidden', !connected);
+        $('stopFolderBtn').classList.toggle('hidden', !connected);
+        $('deleteAfterCheck').disabled = connected;
+        $('pauseFolderBtn').textContent = state.watching ? 'Pausieren' : 'Fortsetzen';
+        $('folderStatus').textContent = connected
+          ? 'Ordner: ' + state.dirHandle.name + ' · ' + (state.watching ? 'Aktiv' : 'Pausiert') + ' · ' + state.uploadedViaWatcher + ' übertragen'
+          : '';
+      }
+
+      // Kiosk Auto-Hide Bar
+      function revealKioskBar() {
+        $('kioskBar').classList.remove('hide');
+        $('kioskView').classList.remove('idle');
+        clearTimeout(kioskIdleTimer);
+        kioskIdleTimer = setTimeout(() => {
+          $('kioskBar').classList.add('hide');
+          $('kioskView').classList.add('idle');
+        }, 3000);
+      }
+
+      // Events
+      $('brandBtn').addEventListener('click', () => setView('gallery'));
+      $('backGalleryBtn').addEventListener('click', () => setView('gallery'));
+      $('settingsBtn').addEventListener('click', () => setView('settings'));
+      $('privacyLink').addEventListener('click', () => setView('privacy'));
+      $('privacyBackBtn').addEventListener('click', () => setView('gallery'));
+
+      $('pinForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        $('pinError').classList.add('hidden');
+        const pin = $('pinInput').value.trim();
+        const setup = !state.pinConfigured;
+        if (setup && pin !== $('pinConfirmInput').value.trim()) {
+          $('pinError').textContent = 'Die beiden PIN-Eingaben stimmen nicht überein.';
+          $('pinError').classList.remove('hidden');
+          return;
+        }
+        try {
+          const res = await fetch(setup ? '/api/auth/setup' : '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.token) throw new Error(data.error || 'Anmeldung fehlgeschlagen.');
+          state.teamToken = data.token;
+          state.pinConfigured = true;
+          $('pinInput').value = '';
+          $('pinConfirmInput').value = '';
+          renderSettingsAuth();
+          renderGallery();
+          showToast('Einstellungen freigeschaltet.');
+        } catch (err) {
+          $('pinError').textContent = err.message;
+          $('pinError').classList.remove('hidden');
+        }
+      });
+
+      $('logoutBtn').addEventListener('click', async () => {
+        const tok = state.teamToken;
+        state.teamToken = null;
+        state.watching = false;
+        state.dirHandle = null;
+        updateFolderUI();
+        if (tok) fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + tok } }).catch(() => {});
+        renderSettingsAuth();
+        renderGallery();
+        showToast('Abgemeldet.');
+      });
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          $('tabUpload').classList.toggle('hidden', btn.dataset.tab !== 'upload');
+          $('tabKiosk').classList.toggle('hidden', btn.dataset.tab !== 'kiosk');
+        });
+      });
+
+      $('selectFilesBtn').addEventListener('click', () => $('fileInput').click());
+      $('openCameraBtn').addEventListener('click', () => $('cameraInput').click());
+      $('fileInput').addEventListener('change', (e) => { handleManualFiles(e.target.files); e.target.value = ''; });
+      $('cameraInput').addEventListener('change', (e) => { handleManualFiles(e.target.files); e.target.value = ''; });
+      const dz = $('dropzone');
+      dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+      dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('drag'); handleManualFiles(e.dataTransfer.files); });
+
+      $('pickFolderBtn').addEventListener('click', async () => {
+        $('folderWarning').classList.add('hidden');
+        if (!window.showDirectoryPicker) {
+          $('folderWarning').textContent = 'Bitte Chrome oder Edge auf Mac/Windows nutzen – Safari/Firefox erlauben kein automatisches Ordner-Löschen im Browser.';
+          $('folderWarning').classList.remove('hidden');
+          return;
+        }
+        try {
+          const mode = $('deleteAfterCheck').checked ? 'readwrite' : 'read';
+          const handle = await window.showDirectoryPicker({ mode });
+          if (mode === 'readwrite' && handle.requestPermission) {
+            const p = await handle.requestPermission({ mode: 'readwrite' });
+            if (p !== 'granted') throw new Error('Schreib-/Löschfreigabe für den Ordner wurde verweigert.');
+          }
+          state.dirHandle = handle;
+          state.watching = true;
+          stabilityMap.clear();
+          updateFolderUI();
+          clearInterval(watcherInterval);
+          watcherInterval = setInterval(scanWatchFolder, 1500);
+          scanWatchFolder();
+          showToast('Ordner „' + handle.name + '“ wird überwacht.');
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+          $('folderWarning').textContent = err.message || 'Ordner konnte nicht geöffnet werden.';
+          $('folderWarning').classList.remove('hidden');
+        }
+      });
+
+      $('pauseFolderBtn').addEventListener('click', () => { state.watching = !state.watching; updateFolderUI(); });
+      $('stopFolderBtn').addEventListener('click', () => {
+        state.watching = false; state.dirHandle = null; clearInterval(watcherInterval); updateFolderUI();
+      });
+
+      $('startKioskBtn').addEventListener('click', () => setView('kiosk'));
+      $('kioskExitBtn').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); setView('settings'); });
+      $('kiosk2Btn').addEventListener('click', () => { state.kioskCount = 2; $('kiosk2Btn').classList.add('active'); $('kiosk3Btn').classList.remove('active'); renderKiosk(true); });
+      $('kiosk3Btn').addEventListener('click', () => { state.kioskCount = 3; $('kiosk3Btn').classList.add('active'); $('kiosk2Btn').classList.remove('active'); renderKiosk(true); });
+      $('kioskFsBtn').addEventListener('click', () => {
+        if (!document.fullscreenElement) $('kioskView').requestFullscreen().catch(() => {});
+        else document.exitFullscreen().catch(() => {});
+      });
+      $('kioskView').addEventListener('mousemove', revealKioskBar);
+      $('kioskView').addEventListener('touchstart', revealKioskBar);
+
+      $('lbCloseBtn').addEventListener('click', closeLightbox);
+      $('lbPrevBtn').addEventListener('click', () => {
+        const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
+        if (i > 0) { state.lightboxId = list[i - 1].id; updateLightboxMeta(); }
+      });
+      $('lbNextBtn').addEventListener('click', () => {
+        const list = activePhotos(); const i = list.findIndex((p) => p.id === state.lightboxId);
+        if (i >= 0 && i < list.length - 1) { state.lightboxId = list[i + 1].id; updateLightboxMeta(); }
+      });
+      $('lbSaveBtn').addEventListener('click', () => {
+        const p = activePhotos().find((x) => x.id === state.lightboxId);
+        if (p) savePhoto(p, false);
+      });
+      $('lbDownloadBtn').addEventListener('click', () => {
+        const p = activePhotos().find((x) => x.id === state.lightboxId);
+        if (p) savePhoto(p, true);
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (state.lightboxId) {
+          if (e.key === 'Escape') closeLightbox();
+          if (e.key === 'ArrowLeft') $('lbPrevBtn').click();
+          if (e.key === 'ArrowRight') $('lbNextBtn').click();
+        } else if (state.view === 'kiosk') {
+          if (e.key === 'Escape' && !document.fullscreenElement) setView('settings');
+          if (e.key === '2') $('kiosk2Btn').click();
+          if (e.key === '3') $('kiosk3Btn').click();
+          if (e.key.toLowerCase() === 'f') $('kioskFsBtn').click();
+        }
+      });
+
+      // Start live sync (alle 2 Sek.) + 1-Sekunden-Countdown
+      fetchAuthStatus();
+      fetchPhotos();
+      setInterval(() => { if (document.visibilityState === 'visible') fetchPhotos(); }, 2000);
+      setInterval(() => {
+        const before = state.photos.length;
+        state.photos = activePhotos();
+        if (state.photos.length !== before) renderAll();
+        else updateCountdowns();
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
