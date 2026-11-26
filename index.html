@@ -33,6 +33,8 @@
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
       --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-flip: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     *, *::before, *::after {
@@ -286,11 +288,26 @@
       min-width: 0;
     }
 
+    .photo-card.card-enter {
+      animation: galleryCardEnter 420ms var(--ease-out-expo) both;
+    }
+
+    @keyframes galleryCardEnter {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
     .photo-thumb-btn {
       position: relative;
       display: block;
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 16 / 10;
       background: #f1f1f3;
       overflow: hidden;
     }
@@ -557,7 +574,7 @@
       border-radius: var(--radius-sm);
       background: var(--surface);
       color: var(--text);
-      font-size: 16px; /* Verhindert Auto-Zoom auf iOS */
+      font-size: 16px;
     }
 
     .input:focus {
@@ -729,7 +746,7 @@
       transform: translateX(22px);
     }
 
-    /* Copyable URL Box (kein Abschneiden auf Handys) */
+    /* Copyable URL Box */
     .url-box {
       display: flex;
       flex-direction: column;
@@ -765,7 +782,6 @@
     .admin-list {
       display: flex;
       flex-direction: column;
-      divide-y: 1px solid var(--border);
     }
 
     .admin-photo-row {
@@ -784,8 +800,8 @@
     }
 
     .admin-thumb {
-      width: 56px;
-      height: 44px;
+      width: 60px;
+      height: 40px;
       border-radius: 6px;
       object-fit: cover;
       background: var(--surface-subtle);
@@ -845,7 +861,7 @@
       color: var(--danger);
     }
 
-    /* Lightbox (iPhone & Android Safe) */
+    /* Lightbox */
     .lightbox {
       position: fixed;
       inset: 0;
@@ -930,7 +946,9 @@
       border: 1px solid rgba(255, 255, 255, 0.18);
     }
 
-    /* Kiosk Mode (Beamer & OBS) */
+    /* ============================================================
+       KIOSK MODES (Aula-Beamer Querformat-Bühne & OBS Szene 2)
+       ============================================================ */
     .kiosk-screen {
       position: fixed;
       inset: 0;
@@ -944,41 +962,96 @@
       flex-direction: column;
     }
 
-    /* Kiosk 1: Puristische Galerie (2 oder 3 Fotos) */
-    .kiosk-gallery {
+    /* Kiosk 1: Querformat-Bühne (FLIP-ready) */
+    .kiosk-gallery-wrap {
       flex: 1;
       min-height: 0;
       width: 100%;
       height: 100%;
-      padding: 18px;
-      display: grid;
-      gap: 16px;
+      padding: clamp(14px, 2vw, 28px);
+      display: flex;
       align-items: center;
-      justify-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
     }
 
-    .kiosk-gallery.cols-1 { grid-template-columns: 1fr; }
-    .kiosk-gallery.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .kiosk-gallery.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kiosk-gallery {
+      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      display: grid;
+      gap: clamp(12px, 1.5vw, 20px);
+      align-items: center;
+      justify-items: center;
+      align-content: center;
+    }
 
-    @media (max-width: 720px) {
-      .kiosk-gallery.cols-2,
-      .kiosk-gallery.cols-3 {
-        grid-template-columns: 1fr;
+    /* 1 Querformat-Foto: maximal groß */
+    .kiosk-gallery.layout-1 {
+      grid-template-columns: 1fr;
+      width: min(100%, calc((100dvh - 56px) * 16 / 9));
+    }
+
+    /* 2 Querformat-Fotos: nebeneinander links → rechts */
+    .kiosk-gallery.layout-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: min(100%, calc((100dvh - 56px) * 32 / 9));
+    }
+
+    /* 3 Querformat-Fotos: Querformat-Bento (Großes Hauptfoto links + 2 rechts gestapelt) */
+    .kiosk-gallery.layout-bento-3 {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      width: min(100%, calc((100dvh - 56px) * 2.62));
+    }
+
+    .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="0"] {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+
+    .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="1"] {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="2"] {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    @media (max-width: 760px) {
+      .kiosk-gallery-wrap {
+        align-items: flex-start;
         overflow-y: auto;
+      }
+      .kiosk-gallery.layout-2,
+      .kiosk-gallery.layout-bento-3 {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        width: 100%;
+      }
+      .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="0"],
+      .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="1"],
+      .kiosk-gallery.layout-bento-3 .kiosk-photo-slot[data-slot="2"] {
+        grid-column: 1;
+        grid-row: auto;
       }
     }
 
     .kiosk-photo-slot {
       width: 100%;
-      height: 100%;
-      min-height: 0;
+      aspect-ratio: 16 / 9;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border-radius: 10px;
-      background: #0c0c0e;
+      border-radius: 12px;
+      background: #0c0c0f;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.52);
+      will-change: transform, opacity;
     }
 
     .kiosk-photo-slot img {
@@ -987,13 +1060,44 @@
       object-fit: contain;
     }
 
-    /* Kiosk 2: Neuestes Foto + Persönlicher QR-Code (OBS Szene 2) */
+    .kiosk-photo-slot.slot-new-glow {
+      animation: slotNewRing 900ms var(--ease-out-expo) both;
+    }
+
+    @keyframes slotNewRing {
+      0% {
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72), 0 24px 60px rgba(37, 99, 235, 0.28);
+      }
+      100% {
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.52);
+      }
+    }
+
+    .kiosk-exit-ghost {
+      position: fixed;
+      z-index: 52;
+      pointer-events: none;
+      margin: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0c0c0f;
+      will-change: transform, opacity;
+      transition: transform 540ms cubic-bezier(0.4, 0, 1, 1), opacity 480ms ease-out;
+    }
+
+    .kiosk-exit-ghost img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Kiosk 2: OBS Szene 2 (Kamera-Blitz + Slide + QR-Scan-Linie) */
     .kiosk-single {
       flex: 1;
       min-height: 0;
       width: 100%;
       height: 100%;
-      padding: clamp(16px, 2.5vw, 36px);
+      padding: clamp(16px, 2.5vw, 38px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1004,17 +1108,77 @@
       flex: 1;
       min-width: 0;
       height: 100%;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      border-radius: 14px;
     }
 
-    .kiosk-single-media img {
+    .kiosk-single-layer {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform, opacity;
+    }
+
+    .kiosk-single-layer img {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
       border-radius: 12px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.58);
+    }
+
+    .kiosk-single-layer.obs-enter {
+      animation: obsPhotoEnter 720ms 50ms var(--ease-out-expo) both;
+    }
+
+    .kiosk-single-layer.obs-exit {
+      pointer-events: none;
+      animation: obsPhotoExit 620ms var(--ease-flip) forwards;
+    }
+
+    @keyframes obsPhotoEnter {
+      0% {
+        opacity: 0;
+        transform: translateX(42px) scale(1.018);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    @keyframes obsPhotoExit {
+      0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-34px) scale(0.965);
+      }
+    }
+
+    .kiosk-flash-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      border-radius: 14px;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.44) 0%, rgba(255, 255, 255, 0.22) 55%, rgba(255, 255, 255, 0.06) 100%);
+      animation: obsShutterFlash 260ms ease-out forwards;
+      will-change: opacity;
+    }
+
+    @keyframes obsShutterFlash {
+      0% { opacity: 0; }
+      22% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     .kiosk-qr-panel {
@@ -1030,6 +1194,29 @@
       text-align: center;
       gap: 14px;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border: 2px solid transparent;
+      transition: border-color 300ms ease, box-shadow 300ms ease;
+    }
+
+    .kiosk-qr-panel.qr-card-pulse {
+      animation: qrCardPulse 920ms var(--ease-out-expo) both;
+    }
+
+    @keyframes qrCardPulse {
+      0% {
+        transform: scale(0.985);
+        border-color: rgba(37, 99, 235, 0);
+      }
+      55% {
+        transform: scale(1);
+        border-color: rgba(37, 99, 235, 0.55);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 6px rgba(37, 99, 235, 0.16);
+      }
+      100% {
+        transform: scale(1);
+        border-color: transparent;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
     }
 
     .kiosk-qr-title {
@@ -1055,12 +1242,76 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    .kiosk-qr-box svg {
+    .kiosk-qr-svg-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform, opacity;
+    }
+
+    .kiosk-qr-svg-wrap.qr-pop {
+      animation: qrPopIn 500ms 150ms var(--ease-out-expo) both;
+    }
+
+    @keyframes qrPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .kiosk-qr-svg-wrap svg {
       width: 100%;
       height: 100%;
       display: block;
+    }
+
+    /* Kobaltblaue Laser-Scan-Linie über dem neuen QR-Code */
+    .qr-scan-beam {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 44%;
+      pointer-events: none;
+      z-index: 4;
+      background: linear-gradient(
+        180deg,
+        rgba(37, 99, 235, 0) 0%,
+        rgba(37, 99, 235, 0.16) 78%,
+        rgba(37, 99, 235, 0.95) 95%,
+        rgba(96, 165, 250, 0.7) 98%,
+        rgba(37, 99, 235, 0) 100%
+      );
+      animation: qrScanSweep 700ms 170ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes qrScanSweep {
+      0% {
+        opacity: 0;
+        transform: translateY(-105%);
+      }
+      12% {
+        opacity: 1;
+      }
+      88% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(235%);
+      }
     }
 
     .kiosk-qr-url {
@@ -1073,6 +1324,22 @@
       border-radius: 8px;
       word-break: break-all;
       line-height: 1.35;
+    }
+
+    .kiosk-qr-url.qr-meta-in,
+    .kiosk-qr-timer.qr-meta-in {
+      animation: qrMetaFade 460ms 220ms var(--ease-out-expo) both;
+    }
+
+    @keyframes qrMetaFade {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .kiosk-qr-timer {
@@ -1089,8 +1356,7 @@
       }
       .kiosk-single-media {
         width: 100%;
-        height: auto;
-        max-height: 48dvh;
+        height: 44dvh;
         flex: 0 0 auto;
       }
       .kiosk-qr-panel {
@@ -1195,6 +1461,14 @@
       flex-direction: column;
       gap: 4px;
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1275,7 +1549,7 @@
       </form>
     </section>
 
-    <!-- Admin Panel (nach Login) -->
+    <!-- Admin Panel -->
     <section id="adminPanel" class="hidden">
       <div class="tabs" role="tablist" aria-label="Einstellungsbereiche">
         <button type="button" class="tab-btn active" data-tab="upload">Upload</button>
@@ -1395,9 +1669,22 @@
       <!-- Tab 3: Beamer & OBS -->
       <div id="tab-kiosk" class="stack hidden">
         <div class="card stack">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <h2 class="section-title">Kiosk-Animationen (0,7 Sek.)</h2>
+              <p class="section-sub" style="margin-bottom: 0;">Kamera-Blitz &amp; QR-Scan-Linie für OBS Szene 2 sowie flüssige Querformat-FLIP-Verschiebung für den Aula-Beamer.</p>
+            </div>
+            <label class="switch" aria-label="Kiosk-Animationen aktivieren">
+              <input id="kioskAnimToggle" type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card stack">
           <div>
             <h2 class="section-title">Kiosk 2: OBS Szene 2 (Neuestes Foto + QR)</h2>
-            <p class="section-sub">Zeigt immer das allerneueste Foto mit persönlichem QR-Code. Ideal als OBS Browser-Quelle (1920×1080, „Quelle abschalten, wenn nicht sichtbar“ deaktivieren).</p>
+            <p class="section-sub">Zeigt das neueste Querformat-Foto mit sanftem Kamera-Blitz, Einblenden und blauer QR-Scan-Linie. Ideal als OBS Browser-Quelle (1920×1080, „Quelle abschalten, wenn nicht sichtbar“ deaktivieren).</p>
           </div>
 
           <div id="kioskLinksOffWarn" class="notice notice-warn hidden">
@@ -1414,8 +1701,8 @@
 
         <div class="card stack">
           <div>
-            <h2 class="section-title">Kiosk 1: Aula-Beamer (Puristisch)</h2>
-            <p class="section-sub">Dunkler Vollbildmodus ohne Text, Buttons oder QR-Codes – zeigt immer die letzten 2 oder 3 Fotos.</p>
+            <h2 class="section-title">Kiosk 1: Aula-Beamer (Querformat-Bühne)</h2>
+            <p class="section-sub">Optimiert für reine Querformat-Fotos: Bei 3 Fotos rückt das neue Bild groß nach links und schiebt die bisherigen flüssig nach rechts. Ohne Text oder QR-Codes.</p>
           </div>
 
           <div class="inline-row">
@@ -1484,10 +1771,13 @@
       const POLL_GALLERY_MS = 3000;
       const POLL_KIOSK_MS = 1500;
 
+      const prefersReducedMotion = () =>
+        Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
       const state = {
         view: 'gallery', // 'gallery' | 'direct' | 'privacy' | 'settings' | 'kiosk'
         activeTab: 'upload',
-        token: null, // Nur im Arbeitsspeicher, niemals localStorage
+        token: null, // Nur im Arbeitsspeicher
         pinConfigured: true,
         photos: [],
         ttlMinutes: 5,
@@ -1499,9 +1789,19 @@
         kioskMode: 'gallery', // 'gallery' | 'single'
         kioskCount: 3,
         kioskDirectBoot: false,
-        lastGallerySig: '',
+        animationsEnabled: true,
+        // Kiosk animation state
+        kioskInitialized: false,
+        kioskSeq: 0,
+        kioskRenderedMode: null,
+        kioskSinglePhotoId: null,
+        kioskGalleryIds: [],
+        kioskSlotMap: new Map(), // photoId -> DOM node for FLIP
+        // Gallery diffing
+        galleryCardMap: new Map(), // photoId -> DOM node
+        galleryInitialized: false,
+        lastGalleryLinksFlag: null,
         lastDirectSig: '',
-        lastKioskSig: '',
         lastAdminSig: '',
         pollTimer: null,
         kioskHideTimer: null,
@@ -1520,6 +1820,10 @@
       };
 
       const el = (id) => document.getElementById(id);
+
+      function shouldAnimate() {
+        return state.animationsEnabled && !prefersReducedMotion();
+      }
 
       // ---------- Helpers ----------
       function nowServer() {
@@ -1547,6 +1851,11 @@
         return window.location.origin + '/?foto=' + encodeURIComponent(id);
       }
 
+      function buildKioskUrl(modeParam) {
+        const suffix = state.animationsEnabled ? '' : '&anim=0';
+        return window.location.origin + '/?kiosk=' + modeParam + suffix;
+      }
+
       function normalizePhoto(raw) {
         const createdAt = Number(raw.createdAt ?? raw.created_at ?? Date.now());
         const expiresAt = Number(raw.expiresAt ?? raw.expires_at ?? (createdAt + state.ttlMinutes * 60000));
@@ -1560,6 +1869,21 @@
           createdAt,
           expiresAt,
         };
+      }
+
+      // Lädt & dekodiert das Bild im Speicher, bevor eine Animation startet
+      function preloadImage(src) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.src = src;
+          if (typeof img.decode === 'function') {
+            img.decode().then(() => resolve(true)).catch(() => resolve(false));
+          } else {
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+          }
+        });
       }
 
       function canShareFiles() {
@@ -1644,7 +1968,7 @@
         }
       }
 
-      // Sichere lokale SVG-QR-Code-Erzeugung (ohne innerHTML)
+      // Lokale SVG-QR-Code-Erzeugung (ohne innerHTML)
       function createQrSvgElement(text) {
         if (typeof window.qrcode !== 'function') {
           const fallback = document.createElement('div');
@@ -1733,7 +2057,7 @@
           syncSettingsControls();
           renderActiveView();
         } catch {
-          // Netzwerk kurz weg – beim nächsten Poll automatisch neu laden
+          // Netzwerk kurz unterbrochen – nächster Poll lädt automatisch nach
         }
       }
 
@@ -1748,6 +2072,16 @@
       }
 
       // ---------- Routing & Views ----------
+      function resetKioskStageState() {
+        state.kioskInitialized = false;
+        state.kioskRenderedMode = null;
+        state.kioskSinglePhotoId = null;
+        state.kioskGalleryIds = [];
+        state.kioskSlotMap.clear();
+        state.kioskSeq += 1;
+        el('kioskStage').textContent = '';
+      }
+
       function setView(viewName, opts = {}) {
         state.view = viewName;
 
@@ -1765,7 +2099,7 @@
         if (isKiosk) {
           if (opts.kioskMode) state.kioskMode = opts.kioskMode;
           if (opts.kioskCount) state.kioskCount = opts.kioskCount;
-          state.lastKioskSig = '';
+          resetKioskStageState();
           updateKioskBarButtons();
           if (opts.silentBar) {
             el('kioskBar').classList.add('hide');
@@ -1808,14 +2142,14 @@
           btn.classList.toggle('active', Number(btn.dataset.min) === state.ttlMinutes);
         });
         el('directLinksToggle').checked = state.directLinksEnabled;
+        el('kioskAnimToggle').checked = state.animationsEnabled;
         el('kioskLinksOffWarn').classList.toggle('hidden', state.directLinksEnabled);
       }
 
       function updateKioskUrlDisplays() {
-        const origin = window.location.origin;
-        el('obsSingleUrlText').textContent = origin + '/?kiosk=single';
-        el('beamer3UrlText').textContent = origin + '/?kiosk=3';
-        el('beamer2UrlText').textContent = origin + '/?kiosk=2';
+        el('obsSingleUrlText').textContent = buildKioskUrl('single');
+        el('beamer3UrlText').textContent = buildKioskUrl('3');
+        el('beamer2UrlText').textContent = buildKioskUrl('2');
       }
 
       function renderActiveView() {
@@ -1829,7 +2163,74 @@
         }
       }
 
-      // ---------- Gallery Rendering (Flackerfrei) ----------
+      // ---------- Gallery Rendering (Flackerfrei + sanfter Einlauf neuer Karten) ----------
+      function buildGalleryCard(photo, animateNew) {
+        const mobileShare = canShareFiles();
+        const card = document.createElement('article');
+        card.className = 'photo-card' + (animateNew && shouldAnimate() ? ' card-enter' : '');
+        card.dataset.photoId = photo.id;
+
+        const thumbBtn = document.createElement('button');
+        thumbBtn.type = 'button';
+        thumbBtn.className = 'photo-thumb-btn';
+        thumbBtn.setAttribute('aria-label', 'Foto vergrößern');
+        thumbBtn.addEventListener('click', () => openLightbox(photo.id));
+
+        const img = document.createElement('img');
+        img.src = photoUrl(photo.id);
+        img.alt = 'Live-Foto vom Tag der offenen Tür';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        thumbBtn.appendChild(img);
+
+        const track = document.createElement('div');
+        track.className = 'progress-track';
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+        bar.dataset.role = 'bar';
+        track.appendChild(bar);
+
+        const body = document.createElement('div');
+        body.className = 'photo-body';
+
+        const info = document.createElement('div');
+        info.className = 'photo-meta tabular';
+
+        const cd = document.createElement('span');
+        cd.className = 'photo-countdown';
+        cd.dataset.role = 'countdown';
+
+        const size = document.createElement('span');
+        const dimText = photo.width && photo.height ? `${photo.width}×${photo.height} · ` : '';
+        size.textContent = dimText + formatBytes(photo.sizeBytes);
+
+        info.append(cd, size);
+
+        const actions = document.createElement('div');
+        actions.className = 'photo-actions';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn btn-primary btn-save';
+        saveBtn.textContent = mobileShare ? 'In Fotos sichern' : 'Original laden';
+        saveBtn.addEventListener('click', () => savePhotoLossless(photo, saveBtn));
+        actions.appendChild(saveBtn);
+
+        if (state.directLinksEnabled) {
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'btn btn-secondary btn-copy';
+          copyBtn.textContent = 'Link';
+          copyBtn.setAttribute('aria-label', 'Persönlichen Foto-Link kopieren');
+          copyBtn.addEventListener('click', () => copyText(personalPhotoUrl(photo.id), 'Foto-Link kopiert'));
+          actions.appendChild(copyBtn);
+        }
+
+        body.append(info, actions);
+        card.append(thumbBtn, track, body);
+        return card;
+      }
+
       function renderGallery() {
         const now = nowServer();
         const active = state.photos.filter((p) => p.expiresAt > now);
@@ -1851,85 +2252,41 @@
 
         if (count === 0) {
           grid.textContent = '';
-          state.lastGallerySig = 'EMPTY';
+          state.galleryCardMap.clear();
           empty.classList.remove('hidden');
+          state.galleryInitialized = true;
           return;
         }
         empty.classList.add('hidden');
 
-        const sig = active.map((p) => p.id).join(',') + '|L:' + (state.directLinksEnabled ? '1' : '0');
-        if (sig !== state.lastGallerySig) {
-          state.lastGallerySig = sig;
+        // Falls Link-Schalter geändert wurde, Karten sauber neu aufbauen
+        if (state.lastGalleryLinksFlag !== null && state.lastGalleryLinksFlag !== state.directLinksEnabled) {
           grid.textContent = '';
-          const mobileShare = canShareFiles();
+          state.galleryCardMap.clear();
+        }
+        state.lastGalleryLinksFlag = state.directLinksEnabled;
 
-          for (const photo of active) {
-            const card = document.createElement('article');
-            card.className = 'photo-card';
-            card.dataset.photoId = photo.id;
-
-            const thumbBtn = document.createElement('button');
-            thumbBtn.type = 'button';
-            thumbBtn.className = 'photo-thumb-btn';
-            thumbBtn.setAttribute('aria-label', 'Foto vergrößern');
-            thumbBtn.addEventListener('click', () => openLightbox(photo.id));
-
-            const img = document.createElement('img');
-            img.src = photoUrl(photo.id);
-            img.alt = 'Live-Foto vom Tag der offenen Tür';
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            thumbBtn.appendChild(img);
-
-            const track = document.createElement('div');
-            track.className = 'progress-track';
-            const bar = document.createElement('div');
-            bar.className = 'progress-bar';
-            bar.dataset.role = 'bar';
-            track.appendChild(bar);
-
-            const body = document.createElement('div');
-            body.className = 'photo-body';
-
-            const info = document.createElement('div');
-            info.className = 'photo-meta tabular';
-
-            const cd = document.createElement('span');
-            cd.className = 'photo-countdown';
-            cd.dataset.role = 'countdown';
-
-            const size = document.createElement('span');
-            const dimText = photo.width && photo.height ? `${photo.width}×${photo.height} · ` : '';
-            size.textContent = dimText + formatBytes(photo.sizeBytes);
-
-            info.append(cd, size);
-
-            const actions = document.createElement('div');
-            actions.className = 'photo-actions';
-
-            const saveBtn = document.createElement('button');
-            saveBtn.type = 'button';
-            saveBtn.className = 'btn btn-primary btn-save';
-            saveBtn.textContent = mobileShare ? 'In Fotos sichern' : 'Original laden';
-            saveBtn.addEventListener('click', () => savePhotoLossless(photo, saveBtn));
-            actions.appendChild(saveBtn);
-
-            if (state.directLinksEnabled) {
-              const copyBtn = document.createElement('button');
-              copyBtn.type = 'button';
-              copyBtn.className = 'btn btn-secondary btn-copy';
-              copyBtn.textContent = 'Link';
-              copyBtn.setAttribute('aria-label', 'Persönlichen Foto-Link kopieren');
-              copyBtn.addEventListener('click', () => copyText(personalPhotoUrl(photo.id), 'Foto-Link kopiert'));
-              actions.appendChild(copyBtn);
-            }
-
-            body.append(info, actions);
-            card.append(thumbBtn, track, body);
-            grid.appendChild(card);
+        const activeIds = new Set(active.map((p) => p.id));
+        for (const [id, node] of state.galleryCardMap.entries()) {
+          if (!activeIds.has(id)) {
+            node.remove();
+            state.galleryCardMap.delete(id);
           }
         }
 
+        active.forEach((photo, idx) => {
+          let card = state.galleryCardMap.get(photo.id);
+          if (!card) {
+            card = buildGalleryCard(photo, state.galleryInitialized);
+            state.galleryCardMap.set(photo.id, card);
+          }
+          const currentAtIdx = grid.children[idx];
+          if (currentAtIdx !== card) {
+            grid.insertBefore(card, currentAtIdx || null);
+          }
+        });
+
+        state.galleryInitialized = true;
         updateGalleryCountdowns();
       }
 
@@ -2144,7 +2501,9 @@
         el('lightboxMeta').textContent = `Löscht in ${formatCountdown(rem)}${dim} · ${formatBytes(photo.sizeBytes)}`;
       }
 
-      // ---------- Kiosk Modes (Aula Beamer & OBS Szene 2) ----------
+      // ============================================================
+      // KIOSK ANIMATIONS-ENGINE (OBS Szene 2 + Aula-Beamer FLIP)
+      // ============================================================
       function revealKioskBar() {
         const bar = el('kioskBar');
         bar.classList.remove('hide');
@@ -2160,104 +2519,360 @@
         el('kioskBtnSingle').classList.toggle('active', state.kioskMode === 'single');
       }
 
-      function renderKiosk() {
+      function showKioskEmpty() {
         const stage = el('kioskStage');
-        const now = nowServer();
-        const active = state.photos.filter((p) => p.expiresAt > now);
+        if (state.kioskRenderedMode === 'empty') return;
+        state.kioskRenderedMode = 'empty';
+        state.kioskSinglePhotoId = null;
+        state.kioskGalleryIds = [];
+        state.kioskSlotMap.clear();
+        stage.textContent = '';
 
-        if (active.length === 0) {
-          const sig = 'KIOSK_EMPTY:' + state.kioskMode;
-          if (state.lastKioskSig === sig) return;
-          state.lastKioskSig = sig;
-          stage.textContent = '';
-          const empty = document.createElement('div');
-          empty.className = 'kiosk-empty';
-          const h = document.createElement('h2');
-          h.style.fontSize = 'clamp(1.2rem, 2.6vw, 1.8rem)';
-          h.style.color = '#ffffff';
-          h.textContent = 'Bereit für das nächste Foto';
-          const p = document.createElement('p');
-          p.textContent = 'Neue Aufnahmen erscheinen hier automatisch in wenigen Sekunden.';
-          empty.append(h, p);
-          stage.appendChild(empty);
-          return;
+        const empty = document.createElement('div');
+        empty.className = 'kiosk-empty';
+        const h = document.createElement('h2');
+        h.style.fontSize = 'clamp(1.2rem, 2.6vw, 1.8rem)';
+        h.style.color = '#ffffff';
+        h.textContent = 'Bereit für das nächste Foto';
+        const p = document.createElement('p');
+        p.textContent = 'Neue Aufnahmen erscheinen hier automatisch in wenigen Sekunden.';
+        empty.append(h, p);
+        stage.appendChild(empty);
+        state.kioskInitialized = true;
+      }
+
+      function triggerQrScanSweep(qrBox, panel) {
+        if (!shouldAnimate() || !qrBox) return;
+        qrBox.querySelectorAll('.qr-scan-beam').forEach((n) => n.remove());
+        const beam = document.createElement('div');
+        beam.className = 'qr-scan-beam';
+        qrBox.appendChild(beam);
+        setTimeout(() => beam.remove(), 1000);
+
+        if (panel) {
+          panel.classList.remove('qr-card-pulse');
+          void panel.offsetWidth;
+          panel.classList.add('qr-card-pulse');
         }
+      }
 
-        if (state.kioskMode === 'single') {
-          const latest = active[0];
-          const showQr = state.directLinksEnabled;
-          const sig = `SINGLE:${latest.id}|QR:${showQr ? '1' : '0'}`;
-          if (state.lastKioskSig !== sig) {
-            state.lastKioskSig = sig;
-            stage.textContent = '';
+      async function renderKioskSingle(latest) {
+        const showQr = state.directLinksEnabled;
+        const alreadySame =
+          state.kioskRenderedMode === 'single' &&
+          state.kioskSinglePhotoId === latest.id &&
+          Boolean(el('kioskQrPanel')) === showQr;
 
-            const wrap = document.createElement('div');
-            wrap.className = 'kiosk-single';
-
-            const media = document.createElement('div');
-            media.className = 'kiosk-single-media';
-            const img = document.createElement('img');
-            img.src = photoUrl(latest.id);
-            img.alt = 'Aktuelles Foto';
-            media.appendChild(img);
-            wrap.appendChild(media);
-
-            if (showQr) {
-              const link = personalPhotoUrl(latest.id);
-              const panel = document.createElement('aside');
-              panel.className = 'kiosk-qr-panel';
-
-              const title = document.createElement('div');
-              title.className = 'kiosk-qr-title';
-              title.textContent = 'Dein Foto scannen';
-
-              const sub = document.createElement('div');
-              sub.className = 'kiosk-qr-sub';
-              sub.textContent = 'QR-Code mit der Handy-Kamera scannen und in Originalqualität sichern.';
-
-              const qrBox = document.createElement('div');
-              qrBox.className = 'kiosk-qr-box';
-              qrBox.appendChild(createQrSvgElement(link));
-
-              const urlBox = document.createElement('div');
-              urlBox.className = 'kiosk-qr-url';
-              urlBox.textContent = link;
-
-              const timer = document.createElement('div');
-              timer.className = 'kiosk-qr-timer tabular';
-              timer.id = 'kioskSingleTimer';
-              timer.dataset.photoId = latest.id;
-
-              panel.append(title, sub, qrBox, urlBox, timer);
-              wrap.appendChild(panel);
-            }
-
-            stage.appendChild(wrap);
-          }
-
+        if (alreadySame) {
           updateKioskCountdown();
           return;
         }
 
-        // Kiosk 1: Puristisch (2 oder 3 Fotos)
-        const shown = active.slice(0, state.kioskCount);
-        const sig = `GALLERY:${state.kioskCount}:` + shown.map((p) => p.id).join(',');
-        if (state.lastKioskSig === sig) return;
-        state.lastKioskSig = sig;
-        stage.textContent = '';
-
-        const grid = document.createElement('div');
-        grid.className = `kiosk-gallery cols-${Math.min(state.kioskCount, shown.length)}`;
-        for (const p of shown) {
-          const slot = document.createElement('div');
-          slot.className = 'kiosk-photo-slot';
-          const img = document.createElement('img');
-          img.src = photoUrl(p.id);
-          img.alt = 'Beamer-Foto';
-          slot.appendChild(img);
-          grid.appendChild(slot);
+        const seq = ++state.kioskSeq;
+        const imgSrc = photoUrl(latest.id);
+        await preloadImage(imgSrc);
+        if (seq !== state.kioskSeq || state.view !== 'kiosk' || state.kioskMode !== 'single') {
+          return;
         }
-        stage.appendChild(grid);
+
+        const stage = el('kioskStage');
+        const animateTransition = state.kioskInitialized && state.kioskRenderedMode === 'single' && state.kioskSinglePhotoId !== latest.id && shouldAnimate();
+
+        let wrap = el('kioskSingleWrap');
+        let media = el('kioskSingleMedia');
+
+        if (!wrap || !media || state.kioskRenderedMode !== 'single') {
+          stage.textContent = '';
+          wrap = document.createElement('div');
+          wrap.id = 'kioskSingleWrap';
+          wrap.className = 'kiosk-single';
+
+          media = document.createElement('div');
+          media.id = 'kioskSingleMedia';
+          media.className = 'kiosk-single-media';
+
+          wrap.appendChild(media);
+          stage.appendChild(wrap);
+        }
+
+        // 1. Fotowechsel mit sanftem Kamera-Blitz + Slide
+        if (state.kioskSinglePhotoId !== latest.id) {
+          const prevLayers = Array.from(media.querySelectorAll('.kiosk-single-layer'));
+
+          if (animateTransition) {
+            // Altes Foto weich nach links ausgleiten lassen
+            prevLayers.forEach((layer) => {
+              layer.classList.remove('obs-enter');
+              layer.classList.add('obs-exit');
+              setTimeout(() => layer.remove(), 680);
+            });
+
+            // Sanfter Kamera-Blitz (radialer Lichtimpuls)
+            const flash = document.createElement('div');
+            flash.className = 'kiosk-flash-overlay';
+            media.appendChild(flash);
+            setTimeout(() => flash.remove(), 320);
+          } else {
+            prevLayers.forEach((layer) => layer.remove());
+          }
+
+          const newLayer = document.createElement('div');
+          newLayer.className = 'kiosk-single-layer' + (animateTransition ? ' obs-enter' : '');
+          const img = document.createElement('img');
+          img.src = imgSrc;
+          img.alt = 'Aktuelles Foto';
+          newLayer.appendChild(img);
+          media.appendChild(newLayer);
+        }
+
+        // 2. QR-Code-Karte mit lokaler SVG-Generierung & blauer Scan-Linie
+        let panel = el('kioskQrPanel');
+        if (!showQr) {
+          if (panel) panel.remove();
+        } else {
+          const link = personalPhotoUrl(latest.id);
+          if (!panel) {
+            panel = document.createElement('aside');
+            panel.id = 'kioskQrPanel';
+            panel.className = 'kiosk-qr-panel';
+
+            const title = document.createElement('div');
+            title.className = 'kiosk-qr-title';
+            title.textContent = 'Dein Foto scannen';
+
+            const sub = document.createElement('div');
+            sub.className = 'kiosk-qr-sub';
+            sub.textContent = 'QR-Code mit der Handy-Kamera scannen und in Originalqualität sichern.';
+
+            const qrBox = document.createElement('div');
+            qrBox.id = 'kioskQrBox';
+            qrBox.className = 'kiosk-qr-box';
+
+            const urlBox = document.createElement('div');
+            urlBox.id = 'kioskQrUrl';
+            urlBox.className = 'kiosk-qr-url';
+
+            const timer = document.createElement('div');
+            timer.id = 'kioskSingleTimer';
+            timer.className = 'kiosk-qr-timer tabular';
+
+            panel.append(title, sub, qrBox, urlBox, timer);
+            wrap.appendChild(panel);
+          }
+
+          const qrBox = el('kioskQrBox');
+          const urlBox = el('kioskQrUrl');
+          const timer = el('kioskSingleTimer');
+
+          qrBox.textContent = '';
+          const svgWrap = document.createElement('div');
+          svgWrap.className = 'kiosk-qr-svg-wrap' + (animateTransition ? ' qr-pop' : '');
+          svgWrap.appendChild(createQrSvgElement(link));
+          qrBox.appendChild(svgWrap);
+
+          urlBox.textContent = link;
+          timer.dataset.photoId = latest.id;
+
+          if (animateTransition) {
+            urlBox.classList.remove('qr-meta-in');
+            timer.classList.remove('qr-meta-in');
+            void urlBox.offsetWidth;
+            urlBox.classList.add('qr-meta-in');
+            timer.classList.add('qr-meta-in');
+            triggerQrScanSweep(qrBox, panel);
+          }
+        }
+
+        state.kioskRenderedMode = 'single';
+        state.kioskSinglePhotoId = latest.id;
+        state.kioskInitialized = true;
+        updateKioskCountdown();
+      }
+
+      async function renderKioskGallery(active) {
+        const shown = active.slice(0, state.kioskCount);
+        const nextIds = shown.map((p) => p.id);
+        const sameOrder =
+          state.kioskRenderedMode === 'gallery' &&
+          nextIds.length === state.kioskGalleryIds.length &&
+          nextIds.every((id, idx) => id === state.kioskGalleryIds[idx]);
+
+        if (sameOrder) return;
+
+        // Alle wirklich neuen Fotos erst komplett dekodieren (Preload-Gate)
+        const seq = ++state.kioskSeq;
+        const existingIds = new Set(state.kioskGalleryIds);
+        const brandNewIds = nextIds.filter((id) => !existingIds.has(id));
+        if (brandNewIds.length > 0) {
+          await Promise.all(brandNewIds.map((id) => preloadImage(photoUrl(id))));
+        }
+        if (seq !== state.kioskSeq || state.view !== 'kiosk' || state.kioskMode !== 'gallery') {
+          return;
+        }
+
+        const stage = el('kioskStage');
+        let wrap = el('kioskGalleryWrap');
+        let grid = el('kioskGalleryGrid');
+
+        if (!wrap || !grid || state.kioskRenderedMode !== 'gallery') {
+          stage.textContent = '';
+          state.kioskSlotMap.clear();
+          wrap = document.createElement('div');
+          wrap.id = 'kioskGalleryWrap';
+          wrap.className = 'kiosk-gallery-wrap';
+
+          grid = document.createElement('div');
+          grid.id = 'kioskGalleryGrid';
+          grid.className = 'kiosk-gallery';
+
+          wrap.appendChild(grid);
+          stage.appendChild(wrap);
+        }
+
+        const animateFlip = state.kioskInitialized && state.kioskRenderedMode === 'gallery' && shouldAnimate();
+
+        // FLIP Schritt 1 (FIRST): Bisherige Positionen aller sichtbaren Fotos messen
+        const firstRects = new Map();
+        if (animateFlip) {
+          for (const [id, node] of state.kioskSlotMap.entries()) {
+            if (node.isConnected) {
+              firstRects.set(id, node.getBoundingClientRect());
+            }
+          }
+        }
+
+        // Herausgeschobene älteste Fotos sanft nach rechts ausgleiten lassen
+        const nextIdSet = new Set(nextIds);
+        for (const [id, node] of Array.from(state.kioskSlotMap.entries())) {
+          if (!nextIdSet.has(id)) {
+            if (animateFlip && firstRects.has(id)) {
+              const r = firstRects.get(id);
+              const ghost = document.createElement('div');
+              ghost.className = 'kiosk-exit-ghost';
+              ghost.style.left = r.left + 'px';
+              ghost.style.top = r.top + 'px';
+              ghost.style.width = r.width + 'px';
+              ghost.style.height = r.height + 'px';
+              const origImg = node.querySelector('img');
+              if (origImg) {
+                const cloneImg = origImg.cloneNode(true);
+                ghost.appendChild(cloneImg);
+              }
+              document.body.appendChild(ghost);
+              requestAnimationFrame(() => {
+                ghost.style.transform = 'translateX(56px) scale(0.94)';
+                ghost.style.opacity = '0';
+              });
+              setTimeout(() => ghost.remove(), 580);
+            }
+            node.remove();
+            state.kioskSlotMap.delete(id);
+          }
+        }
+
+        // Layout-Klasse für reine Querformat-Fotos setzen
+        const layoutClass =
+          shown.length === 1
+            ? 'layout-1'
+            : shown.length === 2 || state.kioskCount === 2
+              ? 'layout-2'
+              : 'layout-bento-3';
+        grid.className = 'kiosk-gallery ' + layoutClass;
+
+        // FLIP Schritt 2 (LAST): Bestehende DOM-Knoten wiederverwenden & neu anordnen
+        const newlyCreatedNodes = [];
+        shown.forEach((p, idx) => {
+          let slot = state.kioskSlotMap.get(p.id);
+          if (!slot) {
+            slot = document.createElement('div');
+            slot.className = 'kiosk-photo-slot';
+            slot.dataset.photoId = p.id;
+            const img = document.createElement('img');
+            img.src = photoUrl(p.id);
+            img.alt = 'Beamer-Foto';
+            slot.appendChild(img);
+            state.kioskSlotMap.set(p.id, slot);
+            newlyCreatedNodes.push(slot);
+          }
+          slot.dataset.slot = String(idx);
+          grid.appendChild(slot);
+        });
+
+        // FLIP Schritt 3 & 4 (INVERT & PLAY): Bestehende Fotos weich nach rechts verschieben
+        if (animateFlip) {
+          void grid.offsetHeight;
+
+          for (const [id, slot] of state.kioskSlotMap.entries()) {
+            const first = firstRects.get(id);
+            if (!first) continue;
+            const last = slot.getBoundingClientRect();
+            const dx = first.left - last.left;
+            const dy = first.top - last.top;
+            const sx = last.width > 0 ? first.width / last.width : 1;
+            const sy = last.height > 0 ? first.height / last.height : 1;
+
+            if (
+              Math.abs(dx) > 1 ||
+              Math.abs(dy) > 1 ||
+              Math.abs(sx - 1) > 0.01 ||
+              Math.abs(sy - 1) > 0.01
+            ) {
+              slot.style.transformOrigin = 'top left';
+              slot.style.transition = 'none';
+              slot.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  slot.style.transition = 'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)';
+                  slot.style.transform = 'none';
+                });
+              });
+              setTimeout(() => {
+                slot.style.transition = '';
+                slot.style.transform = '';
+                slot.style.transformOrigin = '';
+              }, 740);
+            }
+          }
+
+          // Neues Foto gleitet von links weich in den Haupt-Slot ein
+          for (const slot of newlyCreatedNodes) {
+            slot.style.transition = 'none';
+            slot.style.opacity = '0';
+            slot.style.transform = 'translateX(-58px) scale(0.96)';
+            slot.classList.add('slot-new-glow');
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                slot.style.transition = 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1), opacity 520ms ease-out';
+                slot.style.opacity = '1';
+                slot.style.transform = 'translateX(0) scale(1)';
+              });
+            });
+            setTimeout(() => {
+              slot.style.transition = '';
+              slot.style.opacity = '';
+              slot.style.transform = '';
+              slot.classList.remove('slot-new-glow');
+            }, 920);
+          }
+        }
+
+        state.kioskRenderedMode = 'gallery';
+        state.kioskGalleryIds = nextIds;
+        state.kioskInitialized = true;
+      }
+
+      function renderKiosk() {
+        const now = nowServer();
+        const active = state.photos.filter((p) => p.expiresAt > now);
+        if (active.length === 0) {
+          showKioskEmpty();
+          return;
+        }
+        if (state.kioskMode === 'single') {
+          renderKioskSingle(active[0]);
+        } else {
+          renderKioskGallery(active);
+        }
       }
 
       function updateKioskCountdown() {
@@ -2270,6 +2885,15 @@
         }
         timerEl.textContent = 'Verfügbar noch ' + formatCountdown(p.expiresAt - nowServer());
       }
+
+      // Wenn OBS-Szene wieder sichtbar geschaltet wird, QR-Scan-Linie dezent wiederholen
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && state.view === 'kiosk' && state.kioskMode === 'single' && state.directLinksEnabled) {
+          const qrBox = el('kioskQrBox');
+          const panel = el('kioskQrPanel');
+          if (qrBox) triggerQrScanSweep(qrBox, panel);
+        }
+      });
 
       // ---------- Admin Auth & Tabs ----------
       function updateAuthUI() {
@@ -2408,7 +3032,7 @@
         box.classList.remove('hidden');
 
         let done = 0;
-        let failed = [];
+        const failed = [];
         for (const f of files) {
           box.textContent = `Lade hoch (${done + 1}/${files.length}): ${f.name}…`;
           try {
@@ -2548,7 +3172,6 @@
               continue;
             }
 
-            // Schreib-Stabilität prüfen (wichtig für große OBS-PNGs)
             const prev = state.watcherSeen.get(name);
             if (!prev || prev.size !== file.size || prev.lastModified !== file.lastModified) {
               state.watcherSeen.set(name, { size: file.size, lastModified: file.lastModified, stable: 1 });
@@ -2772,6 +3395,12 @@
         }
       });
 
+      el('kioskAnimToggle').addEventListener('change', (e) => {
+        state.animationsEnabled = Boolean(e.target.checked);
+        updateKioskUrlDisplays();
+        showToast(state.animationsEnabled ? 'Kiosk-Animationen aktiviert' : 'Kiosk-Animationen deaktiviert');
+      });
+
       // Kiosk Launch & Copy Buttons
       el('launchKioskSingleBtn').addEventListener('click', () => {
         setView('kiosk', { kioskMode: 'single', silentBar: false });
@@ -2784,13 +3413,13 @@
       });
 
       el('copyObsSingleBtn').addEventListener('click', () => {
-        copyText(window.location.origin + '/?kiosk=single', 'OBS-Link kopiert');
+        copyText(buildKioskUrl('single'), 'OBS-Link kopiert');
       });
       el('copyBeamer3Btn').addEventListener('click', () => {
-        copyText(window.location.origin + '/?kiosk=3', 'Beamer-Link (3 Fotos) kopiert');
+        copyText(buildKioskUrl('3'), 'Beamer-Link (3 Fotos) kopiert');
       });
       el('copyBeamer2Btn').addEventListener('click', () => {
-        copyText(window.location.origin + '/?kiosk=2', 'Beamer-Link (2 Fotos) kopiert');
+        copyText(buildKioskUrl('2'), 'Beamer-Link (2 Fotos) kopiert');
       });
 
       // Kiosk Floating Bar Controls
@@ -2799,20 +3428,20 @@
       el('kioskBtn2').addEventListener('click', () => {
         state.kioskMode = 'gallery';
         state.kioskCount = 2;
-        state.lastKioskSig = '';
+        resetKioskStageState();
         updateKioskBarButtons();
         renderKiosk();
       });
       el('kioskBtn3').addEventListener('click', () => {
         state.kioskMode = 'gallery';
         state.kioskCount = 3;
-        state.lastKioskSig = '';
+        resetKioskStageState();
         updateKioskBarButtons();
         renderKiosk();
       });
       el('kioskBtnSingle').addEventListener('click', () => {
         state.kioskMode = 'single';
-        state.lastKioskSig = '';
+        resetKioskStageState();
         updateKioskBarButtons();
         renderKiosk();
       });
@@ -2851,17 +3480,9 @@
         }
         if (state.view === 'kiosk') {
           if (e.key === '2') {
-            state.kioskMode = 'gallery';
-            state.kioskCount = 2;
-            state.lastKioskSig = '';
-            updateKioskBarButtons();
-            renderKiosk();
+            el('kioskBtn2').click();
           } else if (e.key === '3') {
-            state.kioskMode = 'gallery';
-            state.kioskCount = 3;
-            state.lastKioskSig = '';
-            updateKioskBarButtons();
-            renderKiosk();
+            el('kioskBtn3').click();
           } else if (e.key.toLowerCase() === 'f') {
             el('kioskBtnFs').click();
           } else if (e.key === 'Escape') {
@@ -2884,6 +3505,9 @@
         const params = new URLSearchParams(window.location.search);
         const kioskParam = (params.get('kiosk') || '').toLowerCase();
         const fotoParam = params.get('foto');
+        if (params.get('anim') === '0') {
+          state.animationsEnabled = false;
+        }
 
         if (kioskParam === 'single' || kioskParam === 'qr') {
           state.kioskDirectBoot = true;
